@@ -56,6 +56,7 @@ public sealed class BarWindow : Window
         Background = Brushes.Transparent,
     };
     readonly TextBlock clock = Ui.Text("", 14, "TextBrush", true);
+    readonly DispatcherTimer guard = new() { Interval = TimeSpan.FromMilliseconds(120) };
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(600) };
     readonly EventHandler displayHandler;
     readonly CultureInfo ru = CultureInfo.GetCultureInfo("ru-RU");
@@ -113,17 +114,45 @@ public sealed class BarWindow : Window
         logo.Label.FontWeight = FontWeights.Bold;
         logo.Click += () => ShowMainMenu(logo);
 
-        var start = new StartButton { ToolTip = "Меню Пуск" };
-        start.Click += Native.PressWinKey;
+        var start = new StartButton { ToolTip = "Меню Пуск (клавиша Win)" };
+        start.Click += () => Launcher.Toggle(s);
+
+        var searchIcon = Ui.Text("\uE721", 14, "MutedBrush");
+        searchIcon.FontFamily = new FontFamily("Segoe MDL2 Assets");
+        searchIcon.VerticalAlignment = VerticalAlignment.Center;
+        var searchText = Ui.Text("Поиск", 13, "MutedBrush");
+        searchText.Margin = new Thickness(8, 0, 0, 0);
+        searchText.VerticalAlignment = VerticalAlignment.Center;
+        var searchRow = new StackPanel { Orientation = Orientation.Horizontal };
+        searchRow.Children.Add(searchIcon);
+        searchRow.Children.Add(searchText);
+        var searchBox = new Border
+        {
+            Width = 150,
+            Height = Math.Min(30, s.BarHeight - 10),
+            CornerRadius = new CornerRadius(15),
+            Padding = new Thickness(12, 0, 12, 0),
+            Margin = new Thickness(6, 0, 0, 0),
+            Cursor = Cursors.Hand,
+            Child = searchRow,
+            ToolTip = "Поиск приложений, файлов и сайтов",
+        };
+        searchBox.Dyn(Border.BackgroundProperty, "HoverBrush");
+        searchBox.MouseLeftButtonUp += (_, e) =>
+        {
+            e.Handled = true;
+            Launcher.Toggle(s);
+        };
 
         var left = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         left.Children.Add(logo);
         left.Children.Add(start);
+        left.Children.Add(searchBox);
 
         // справа: обзор задач, скрытые значки (трей), сеть и часы
-        var taskView = new Chip("", 16) { ToolTip = "Все окна и рабочие столы (Win+Tab)" };
+        var taskView = new Chip("", 16) { ToolTip = "Все открытые окна" };
         taskView.Label.FontFamily = new FontFamily("Segoe MDL2 Assets");
-        taskView.Click += () => Native.PressWinCombo(0x09);
+        taskView.Click += TaskView.Toggle;
 
         var tray = new Chip("", 14) { ToolTip = "Скрытые значки и фоновые приложения (панель Windows покажется на 12 секунд)" };
         tray.Label.FontFamily = new FontFamily("Segoe MDL2 Assets");
@@ -180,6 +209,11 @@ public sealed class BarWindow : Window
         ApplyBorder();
         Tick();
         timer.Tick += (_, _) => Tick();
+        guard.Tick += (_, _) =>
+        {
+            try { KeepTaskbarHidden(); } catch { /* следующий тик повторит */ }
+        };
+        guard.Start();
         timer.Start();
 
         displayHandler = (_, _) => Dispatcher.Invoke(() => Dock());
@@ -193,6 +227,7 @@ public sealed class BarWindow : Window
         Closed += (_, _) =>
         {
             timer.Stop();
+            guard.Stop();
             SystemEvents.DisplaySettingsChanged -= displayHandler;
             if (hwnd != IntPtr.Zero) Native.AppBarRemove(hwnd);
         };
@@ -331,7 +366,7 @@ public sealed class BarWindow : Window
     {
         var f = new Flyout(target, AtTop);
         f.Row(null, "Настройки D4", openSettings);
-        f.Row(null, "Меню Пуск", Native.PressWinKey);
+        f.Row(null, "Меню Пуск и поиск", () => Launcher.Toggle(s));
         f.Row(null, s.HideTaskbar ? "Показать панель задач Windows" : "Скрыть панель задач Windows", toggleTaskbar);
         f.Separator();
         f.Section("Тема");
@@ -737,6 +772,28 @@ public sealed class BarWindow : Window
         }
     }
 
+    /// <summary>Explorer и некоторые действия (Win+клавиша, наведение на край) возвращают панель задач — прячем её снова.</summary>
+    void KeepTaskbarHidden()
+    {
+        if (s.HideTaskbar && Native.IsTaskbarVisible())
+        {
+            var now = DateTime.UtcNow;
+            if (now < revealUntil)
+            {
+                // пока вы пользуетесь треем, панель не прячем
+                if (System.Windows.Forms.Cursor.Position.Y >= Native.GetSystemMetrics(Native.SM_CYSCREEN) - 300)
+                {
+                    var extended = now.AddSeconds(3);
+                    if (extended > revealUntil) revealUntil = extended;
+                }
+            }
+            else
+            {
+                Native.SetTaskbarVisible(false);
+            }
+        }
+    }
+
     void Tick()
     {
         try
@@ -748,24 +805,7 @@ public sealed class BarWindow : Window
                 clock.Text = text;
             }
 
-            // Explorer иногда сам возвращает панель задач — прячем снова
-            if (s.HideTaskbar && Native.IsTaskbarVisible())
-            {
-                var now = DateTime.UtcNow;
-                if (now < revealUntil)
-                {
-                    // пока вы пользуетесь треем, панель не прячем
-                    if (System.Windows.Forms.Cursor.Position.Y >= Native.GetSystemMetrics(Native.SM_CYSCREEN) - 300)
-                    {
-                        var extended = now.AddSeconds(3);
-                        if (extended > revealUntil) revealUntil = extended;
-                    }
-                }
-                else
-                {
-                    Native.SetTaskbarVisible(false);
-                }
-            }
+            KeepTaskbarHidden();
 
             if (tickCount++ % 8 == 0)
             {

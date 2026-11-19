@@ -266,6 +266,8 @@ public sealed class SettingsWindow : Window
         }
         catch { /* нет доступа к реестру */ }
 
+        Check(body, "Красить системные окна Windows (Параметры, Проводник) в цвета темы", s.SyncWindowsTheme, v => s.SyncWindowsTheme = v);
+
         var cb = new CheckBox { Content = "Запускать вместе с Windows", IsChecked = auto, FontSize = 14, Margin = new Thickness(0, 4, 0, 4) };
         cb.Dyn(Control.ForegroundProperty, "TextBrush");
         cb.Checked += (_, _) => SetAutostart(true);

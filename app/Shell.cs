@@ -12,6 +12,7 @@ public sealed class Shell
     readonly Dictionary<string, MiniFolderWindow> folderWindows = new();
 
     BarWindow? bar;
+    WinKeyHook? keyHook;
     readonly WallpaperService wallpaper;
     ClockWidget? clock;
     MonitorWidget? monitor;
@@ -53,6 +54,22 @@ public sealed class Shell
         if (exiting) return;
 
         wallpaper.Apply();
+
+        // системные окна Windows — в цвета темы
+        try
+        {
+            if (s.SyncWindowsTheme) SystemTheme.Apply(s, ThemeManager.Current);
+            else SystemTheme.Restore(s);
+        }
+        catch (Exception ex) { Settings.Log("system theme: " + ex.Message); }
+
+        // клавиша Win открывает меню D4, пока работает наш бар
+        if (s.BarEnabled && keyHook == null) keyHook = new WinKeyHook(() => Launcher.Toggle(s));
+        else if (!s.BarEnabled && keyHook != null)
+        {
+            keyHook.Dispose();
+            keyHook = null;
+        }
 
         Toggle(ref clock, s.ClockWidget, () => new ClockWidget(s));
         Toggle(ref monitor, s.MonitorWidget, () => new MonitorWidget(s));
@@ -165,7 +182,10 @@ public sealed class Shell
             tray = null;
         }
 
+        keyHook?.Dispose();
+        keyHook = null;
         RestoreTaskbar();
+        try { SystemTheme.Restore(s); } catch (Exception ex) { Settings.Log("system theme restore: " + ex.Message); }
         s.Save();
 
         bar?.Close();

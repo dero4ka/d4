@@ -28,6 +28,14 @@ public sealed class Settings
     public string? OriginalStyle { get; set; }
     public string? OriginalTile { get; set; }
 
+    // Тема системных окон Windows (до замены, чтобы вернуть при выходе)
+    public bool SyncWindowsTheme { get; set; } = true;
+    public bool WinThemeSaved { get; set; }
+    public int? WinAppsLight { get; set; }
+    public int? WinSystemLight { get; set; }
+    public int? WinAccent { get; set; }
+    public int? WinAccentMenu { get; set; }
+
     // Бар
     public bool BarEnabled { get; set; } = true;
     /// <summary>Top или Bottom.</summary>
