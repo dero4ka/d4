@@ -43,6 +43,16 @@ public sealed class SettingsWindow : Window
         BuildWallpaper();
         BuildFolders();
         BuildSystem();
+
+        // тема могла смениться из меню бара — синхронизируем рамку на чипах
+        ThemeManager.Changed += SyncThemeChips;
+        Closed += (_, _) => ThemeManager.Changed -= SyncThemeChips;
+    }
+
+    void SyncThemeChips()
+    {
+        var id = ThemeManager.Current.Id;
+        foreach (var (c, cid) in themeChips) c.SetSelected(cid == id);
     }
 
     // ---------- вспомогательные ----------
@@ -206,7 +216,7 @@ public sealed class SettingsWindow : Window
     void BuildWallpaper()
     {
         var body = Section("Обои");
-        Check(body, "Показывать обои D4", s.WallpaperEnabled, v => s.WallpaperEnabled = v);
+        Check(body, "Менять обои Windows на обои D4", s.WallpaperEnabled, v => s.WallpaperEnabled = v);
 
         var current = Ui.Text(string.IsNullOrWhiteSpace(s.WallpaperPath) ? "Сейчас: пейзаж темы" : "Сейчас: " + System.IO.Path.GetFileName(s.WallpaperPath), 13, "MutedBrush");
         current.Margin = new Thickness(0, 6, 0, 6);
@@ -229,7 +239,7 @@ public sealed class SettingsWindow : Window
         }));
         body.Children.Add(row);
 
-        var hint = Ui.Text("Видео ставится на паузу под окнами на весь экран и развёрнутыми окнами.", 12, "MutedBrush");
+        var hint = Ui.Text("Картинки и пейзаж темы ставятся как обои Windows (при выходе возвращается прежняя картинка). Видео играет под иконками и встаёт на паузу под окнами на весь экран.", 12, "MutedBrush");
         hint.Margin = new Thickness(0, 6, 0, 0);
         hint.TextWrapping = TextWrapping.Wrap;
         body.Children.Add(hint);

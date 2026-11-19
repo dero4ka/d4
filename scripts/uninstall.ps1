@@ -1,6 +1,15 @@
 ﻿# Удаление D4
 $ErrorActionPreference = "Continue"
 
+# Возвращает панель Windows; если старая версия D4 не понимает --restore-taskbar и просто запускается — закрываем её
+function Restore-Taskbar($exe) {
+    if (-not (Test-Path $exe)) { return }
+    $p = Start-Process $exe -ArgumentList "--restore-taskbar" -PassThru
+    if (-not $p.WaitForExit(6000)) { $p.Kill() }
+    Get-Process -Name "D4" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Milliseconds 500
+}
+
 function Ask-Yes($question) {
     $a = Read-Host "$question [Y/n]"
     return ($a -eq "" -or $a -match '^(y|Y|д|Д)')
@@ -11,6 +20,9 @@ Write-Host "=== Удаление D4 ===" -ForegroundColor Cyan
 
 Get-Process -Name "D4" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Milliseconds 500
+# принудительная остановка не возвращает панель Windows — возвращаем сами
+$exe = Join-Path $env:LOCALAPPDATA "D4\app\D4.exe"
+Restore-Taskbar $exe
 
 $base = Join-Path $env:LOCALAPPDATA "D4"
 if (Test-Path $base) { Remove-Item -Recurse -Force $base }

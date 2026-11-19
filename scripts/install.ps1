@@ -17,6 +17,15 @@ function Has-Sdk8 {
     } catch { return $false }
 }
 
+# Возвращает панель Windows; если старая версия D4 не понимает --restore-taskbar и просто запускается — закрываем её
+function Restore-Taskbar($exe) {
+    if (-not (Test-Path $exe)) { return }
+    $p = Start-Process $exe -ArgumentList "--restore-taskbar" -PassThru
+    if (-not $p.WaitForExit(6000)) { $p.Kill() }
+    Get-Process -Name "D4" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Milliseconds 500
+}
+
 function Ask-Yes($question) {
     $a = Read-Host "$question [Y/n]"
     return ($a -eq "" -or $a -match '^(y|Y|д|Д)')
@@ -51,6 +60,8 @@ Write-Host "[ok] .NET 8 SDK найден" -ForegroundColor Green
 # 2. Закрываем запущенный D4, чтобы можно было заменить файлы
 Get-Process -Name "D4" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Milliseconds 500
+# принудительная остановка не возвращает панель Windows — возвращаем сами
+Restore-Taskbar $Exe
 
 # 3. Сборка прямо в папку установки
 Write-Host "Собираю D4 (первый раз это занимает 1-2 минуты)..."

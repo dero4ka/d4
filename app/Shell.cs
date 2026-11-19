@@ -12,7 +12,7 @@ public sealed class Shell
     readonly Dictionary<string, MiniFolderWindow> folderWindows = new();
 
     BarWindow? bar;
-    WallpaperWindow? wallpaper;
+    readonly WallpaperService wallpaper;
     ClockWidget? clock;
     MonitorWidget? monitor;
     NotesWidget? notes;
@@ -20,7 +20,11 @@ public sealed class Shell
     System.Windows.Forms.NotifyIcon? tray;
     bool exiting;
 
-    public Shell(Settings settings) => s = settings;
+    public Shell(Settings settings)
+    {
+        s = settings;
+        wallpaper = new WallpaperService(settings);
+    }
 
     public void Start()
     {
@@ -48,8 +52,7 @@ public sealed class Shell
     {
         if (exiting) return;
 
-        Toggle(ref wallpaper, s.WallpaperEnabled, () => new WallpaperWindow(s));
-        wallpaper?.Refresh();
+        wallpaper.Apply();
 
         Toggle(ref clock, s.ClockWidget, () => new ClockWidget(s));
         Toggle(ref monitor, s.MonitorWidget, () => new MonitorWidget(s));
@@ -57,7 +60,7 @@ public sealed class Shell
 
         SyncFolders();
 
-        Toggle(ref bar, s.BarEnabled, () => new BarWindow(s, OpenSettings, ToggleTaskbar, Exit));
+        Toggle(ref bar, s.BarEnabled, () => new BarWindow(s, OpenSettings, ToggleTaskbar, Exit, SetTheme));
         bar?.ApplySettings();
 
         Native.SetTaskbarVisible(!(s.BarEnabled && s.HideTaskbar));
@@ -112,6 +115,16 @@ public sealed class Shell
         settingsWindow.Show();
     }
 
+    /// <summary>Смена темы на лету: без перезапуска и без пересборки окон.</summary>
+    void SetTheme(string id)
+    {
+        s.Theme = id;
+        ThemeManager.Apply(id);
+        s.Save();
+        // обои-сцена зависят от темы
+        try { Reapply(); } catch (Exception ex) { Settings.Log("reapply after theme: " + ex.Message); }
+    }
+
     void ToggleTaskbar()
     {
         s.HideTaskbar = !s.HideTaskbar;
@@ -161,7 +174,7 @@ public sealed class Shell
         notes?.Close();
         foreach (var w in folderWindows.Values.ToList()) w.Close();
         settingsWindow?.Close();
-        wallpaper?.Close();
+        wallpaper.Shutdown();
 
         Application.Current.Shutdown();
     }

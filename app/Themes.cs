@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace D4;
 
@@ -28,42 +30,94 @@ public static class ThemeManager
 
     public static Theme Current { get; private set; } = All[0];
 
-    /// <summary>Срабатывает после смены темы (например, чтобы обои перерисовали сцену).</summary>
+    /// <summary>Срабатывает после смены темы.</summary>
     public static event Action? Changed;
 
     public static Color C(string hex) => (Color)ColorConverter.ConvertFromString(hex);
 
-    static SolidColorBrush Brush(string hex)
+    // Кисти создаются один раз и дальше только плавно меняют цвет — все окна перекрашиваются на лету.
+    static readonly Dictionary<string, SolidColorBrush> brushes = new();
+    static LinearGradientBrush? gradient;
+
+    const int FadeMs = 400;
+
+    static void SetBrush(string key, Color color, bool animate)
     {
-        var b = new SolidColorBrush(C(hex));
-        b.Freeze();
-        return b;
+        try
+        {
+            if (!brushes.TryGetValue(key, out var b) || b.IsFrozen)
+            {
+                b = new SolidColorBrush(color);
+                brushes[key] = b;
+                Application.Current.Resources[key] = b;
+                return;
+            }
+
+            var old = b.Color;
+            b.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            b.Color = color; // итоговый цвет ставим сразу, анимация — только украшение
+            if (animate)
+                b.BeginAnimation(SolidColorBrush.ColorProperty,
+                    new ColorAnimation(old, color, TimeSpan.FromMilliseconds(FadeMs)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+        }
+        catch (Exception ex)
+        {
+            Settings.Log("theme brush " + key + ": " + ex.Message);
+            var nb = new SolidColorBrush(color);
+            brushes[key] = nb;
+            Application.Current.Resources[key] = nb;
+        }
+    }
+
+    static void FadeStop(GradientStop stop, Color color)
+    {
+        var old = stop.Color;
+        stop.BeginAnimation(GradientStop.ColorProperty, null);
+        stop.Color = color;
+        stop.BeginAnimation(GradientStop.ColorProperty,
+            new ColorAnimation(old, color, TimeSpan.FromMilliseconds(FadeMs)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
     }
 
     public static void Apply(string id)
     {
         var t = All.FirstOrDefault(x => x.Id == id) ?? All[0];
+        bool animate = brushes.Count > 0; // первая установка — без анимации
         Current = t;
-        var res = Application.Current.Resources;
 
-        res["BgBrush"] = Brush(t.Bg);
-        res["CardBrush"] = Brush(t.Card);
-        res["CardBorderBrush"] = Brush(t.Dark ? "#33FFFFFF" : "#22000000");
-        res["TextBrush"] = Brush(t.Text);
-        res["MutedBrush"] = Brush(t.Muted);
-        res["AccentBrush"] = Brush(t.Accent);
-        res["Accent2Brush"] = Brush(t.Accent2);
+        SetBrush("BgBrush", C(t.Bg), animate);
+        SetBrush("CardBrush", C(t.Card), animate);
+        SetBrush("CardBorderBrush", C(t.Dark ? "#33FFFFFF" : "#22000000"), animate);
+        SetBrush("TextBrush", C(t.Text), animate);
+        SetBrush("MutedBrush", C(t.Muted), animate);
+        SetBrush("AccentBrush", C(t.Accent), animate);
+        SetBrush("Accent2Brush", C(t.Accent2), animate);
 
         var hover = C(t.Accent);
         hover.A = 0x40;
-        var hb = new SolidColorBrush(hover);
-        hb.Freeze();
-        res["HoverBrush"] = hb;
+        SetBrush("HoverBrush", hover, animate);
 
-        var grad = new LinearGradientBrush(C(t.Accent), C(t.Accent2), 0);
-        grad.Freeze();
-        res["AccentGradBrush"] = grad;
+        try
+        {
+            if (gradient == null || gradient.IsFrozen)
+            {
+                gradient = new LinearGradientBrush(C(t.Accent), C(t.Accent2), 0);
+                Application.Current.Resources["AccentGradBrush"] = gradient;
+            }
+            else
+            {
+                FadeStop(gradient.GradientStops[0], C(t.Accent));
+                FadeStop(gradient.GradientStops[1], C(t.Accent2));
+            }
+        }
+        catch (Exception ex)
+        {
+            Settings.Log("theme gradient: " + ex.Message);
+            gradient = new LinearGradientBrush(C(t.Accent), C(t.Accent2), 0);
+            Application.Current.Resources["AccentGradBrush"] = gradient;
+        }
 
-        Changed?.Invoke();
+        Settings.Log("theme -> " + t.Id);
+        try { Changed?.Invoke(); }
+        catch (Exception ex) { Settings.Log("theme changed handler: " + ex.Message); }
     }
 }

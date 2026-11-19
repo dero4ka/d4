@@ -54,7 +54,11 @@ public sealed class Chip : Border
 
         MouseEnter += (_, _) => this.Dyn(BackgroundProperty, "HoverBrush");
         MouseLeave += (_, _) => Background = Brushes.Transparent;
-        MouseLeftButtonUp += (_, _) => Click?.Invoke();
+        MouseLeftButtonUp += (_, e) =>
+        {
+            e.Handled = true; // не проваливаться в родителя (например, крестик внутри строки списка)
+            Click?.Invoke();
+        };
     }
 
     public void SetSelected(bool selected)
@@ -79,6 +83,50 @@ internal static class AppUtil
         {
             // файл удалён или нет доступа — молча игнорируем
         }
+    }
+
+    /// <summary>Значок, который окно само сообщает системе (нужен для приложений из Store и окон без своего exe).</summary>
+    public static ImageSource? GetWindowIcon(IntPtr hwnd)
+    {
+        try
+        {
+            var h = Native.GetWindowIcon(hwnd);
+            if (h == IntPtr.Zero) return null;
+            var bmp = Imaging.CreateBitmapSourceFromHIcon(h, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            bmp.Freeze();
+            return bmp;
+        }
+        catch { return null; }
+    }
+
+    static ImageSource? defaultIcon;
+
+    public static ImageSource? DefaultIcon()
+    {
+        if (defaultIcon != null) return defaultIcon;
+        try
+        {
+            var bmp = Imaging.CreateBitmapSourceFromHIcon(System.Drawing.SystemIcons.Application.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            bmp.Freeze();
+            defaultIcon = bmp;
+        }
+        catch { /* без запасного значка */ }
+        return defaultIcon;
+    }
+
+    /// <summary>Путь, на который указывает ярлык .lnk (или null).</summary>
+    public static string? ResolveShortcut(string lnk)
+    {
+        try
+        {
+            var t = Type.GetTypeFromProgID("WScript.Shell");
+            if (t == null) return null;
+            dynamic shell = Activator.CreateInstance(t)!;
+            dynamic sc = shell.CreateShortcut(lnk);
+            string target = sc.TargetPath;
+            return string.IsNullOrWhiteSpace(target) ? null : target;
+        }
+        catch { return null; }
     }
 
     public static ImageSource? GetIcon(string path)

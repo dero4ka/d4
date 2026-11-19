@@ -19,12 +19,21 @@ public sealed class Settings
 {
     public string Theme { get; set; } = "ocean";
 
+    /// <summary>Версия формата настроек (нужна, чтобы перенести старые значения).</summary>
+    public int SettingsVersion { get; set; }
+
+    // Обои Windows до замены (чтобы вернуть при выходе)
+    public bool OriginalSaved { get; set; }
+    public string? OriginalWallpaper { get; set; }
+    public string? OriginalStyle { get; set; }
+    public string? OriginalTile { get; set; }
+
     // Бар
     public bool BarEnabled { get; set; } = true;
     /// <summary>Top или Bottom.</summary>
     public string BarEdge { get; set; } = "Top";
     public int BarHeight { get; set; } = 44;
-    public bool HideTaskbar { get; set; } = false;
+    public bool HideTaskbar { get; set; } = true;
     public List<string> Pinned { get; set; } = new();
 
     // Обои
@@ -55,10 +64,18 @@ public sealed class Settings
         try
         {
             if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath)) ?? new Settings();
+            {
+                var loaded = JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath));
+                if (loaded != null)
+                {
+                    // бар должен полностью заменять панель задач — для старых настроек включаем скрытие
+                    if (loaded.SettingsVersion < 2) { loaded.HideTaskbar = true; loaded.SettingsVersion = 2; }
+                    return loaded;
+                }
+            }
         }
         catch { /* битый файл — начинаем с настроек по умолчанию */ }
-        return new Settings();
+        return new Settings { SettingsVersion = 2 };
     }
 
     public void Save()
@@ -88,4 +105,14 @@ public sealed class Settings
     }
 
     public static string DataDir => Dir;
+
+    public static void Log(string message)
+    {
+        try
+        {
+            Directory.CreateDirectory(Dir);
+            File.AppendAllText(Path.Combine(Dir, "d4.log"), DateTime.Now.ToString("s") + "  " + message + Environment.NewLine);
+        }
+        catch { /* лог не критичен */ }
+    }
 }

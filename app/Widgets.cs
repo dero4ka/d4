@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 
@@ -20,6 +21,7 @@ public abstract class WidgetWindow : Window
     protected readonly Border Card = new();
     readonly string key;
     IntPtr hwnd;
+    static int spawned;
 
     /// <param name="height">Если высота &lt;= 0, окно подстраивается под содержимое.</param>
     protected WidgetWindow(Settings settings, string key, string title, double width, double height, double defaultX, double defaultY)
@@ -50,6 +52,8 @@ public abstract class WidgetWindow : Window
         Card.Dyn(Border.BorderBrushProperty, "CardBorderBrush");
         Content = Card;
 
+        PlayIntro();
+
         MouseLeftButtonDown += OnDrag;
         LocationChanged += (_, _) =>
         {
@@ -58,6 +62,21 @@ public abstract class WidgetWindow : Window
         };
         Loaded += (_, _) => SendBack();
         Deactivated += (_, _) => SendBack();
+    }
+
+    /// <summary>Плавное появление: карточка выезжает снизу и проявляется, виджеты — по очереди.</summary>
+    void PlayIntro()
+    {
+        Opacity = 0;
+        var slide = new TranslateTransform(0, 20);
+        Card.RenderTransform = slide;
+        var begin = TimeSpan.FromMilliseconds(130 * spawned++);
+        Loaded += (_, _) =>
+        {
+            var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+            BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(550)) { BeginTime = begin, EasingFunction = ease });
+            slide.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(650)) { BeginTime = begin, EasingFunction = ease });
+        };
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -137,6 +156,10 @@ public sealed class MonitorWidget : WidgetWindow
         return b;
     }
 
+    static void Smooth(ProgressBar bar, double value) =>
+        bar.BeginAnimation(System.Windows.Controls.Primitives.RangeBase.ValueProperty,
+            new DoubleAnimation(value, TimeSpan.FromMilliseconds(700)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+
     public MonitorWidget(Settings settings) : base(settings, "monitor", "D4 Monitor", 280, 170, 80, 300)
     {
         var panel = new StackPanel { Margin = new Thickness(20, 16, 20, 4), VerticalAlignment = VerticalAlignment.Center };
@@ -159,8 +182,8 @@ public sealed class MonitorWidget : WidgetWindow
         var (percent, used, total) = Native.Memory();
         cpuLabel.Text = $"Процессор  {cpu:0}%";
         ramLabel.Text = $"Память  {used:0.0} из {total:0.0} ГБ";
-        cpuBar.Value = cpu;
-        ramBar.Value = percent;
+        Smooth(cpuBar, cpu);
+        Smooth(ramBar, percent);
     }
 }
 
