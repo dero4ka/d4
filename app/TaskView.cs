@@ -94,6 +94,7 @@ internal sealed class TaskViewWindow : Window
         Height = SystemParameters.PrimaryScreenHeight;
         Title = "D4 Task View";
         this.Dyn(BackgroundProperty, "BgBrush");
+        GlassFx.Attach(this);
 
         root.Background = Brushes.Transparent;
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });

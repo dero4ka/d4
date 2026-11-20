@@ -1,6 +1,13 @@
 ﻿# Автоустановка D4: .NET 8 SDK -> сборка -> копирование -> ярлыки -> запуск
 $ErrorActionPreference = "Continue"
 
+# D4 работает с правами администратора — перезапускаем скрипт от администратора, если нужно
+$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Start-Process powershell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -NoExit -File `"$PSCommandPath`""
+    exit
+}
+
 $Root       = Split-Path -Parent $PSScriptRoot
 $Proj       = Join-Path $Root "app\D4.csproj"
 $InstallDir = Join-Path $env:LOCALAPPDATA "D4\app"
@@ -86,10 +93,14 @@ New-Shortcut (Join-Path ([Environment]::GetFolderPath("Desktop")) "D4.lnk") $Exe
 New-Shortcut (Join-Path ([Environment]::GetFolderPath("Programs")) "D4.lnk") $Exe $InstallDir
 Write-Host "[ok] Ярлыки созданы на рабочем столе и в меню Пуск" -ForegroundColor Green
 
-# 5. Автозапуск
+# 5. Автозапуск (через планировщик: старт с правами администратора без окна UAC)
 if (Ask-Yes "Запускать D4 вместе с Windows?") {
-    $key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
-    Set-ItemProperty -Path $key -Name "D4" -Value ('"' + $Exe + '"')
+    $action    = New-ScheduledTaskAction -Execute $Exe -WorkingDirectory $InstallDir
+    $trigger   = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+    $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
+    $settings  = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero)
+    Register-ScheduledTask -TaskName "D4" -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "D4" -ErrorAction SilentlyContinue
     Write-Host "[ok] Автозапуск включён" -ForegroundColor Green
 }
 

@@ -108,6 +108,7 @@ public sealed class BarWindow : Window
         Width = SystemParameters.PrimaryScreenWidth;
         Height = s.BarHeight;
         this.Dyn(BackgroundProperty, "BgBrush");
+        GlassFx.Attach(this);
 
         // слева: меню D4 и кнопка «Пуск»
         var logo = new Chip("D4", 16);
@@ -154,9 +155,9 @@ public sealed class BarWindow : Window
         taskView.Label.FontFamily = new FontFamily("Segoe MDL2 Assets");
         taskView.Click += TaskView.Toggle;
 
-        var tray = new Chip("", 14) { ToolTip = "Скрытые значки и фоновые приложения (панель Windows покажется на 12 секунд)" };
+        var tray = new Chip("", 14) { ToolTip = "Фоновые приложения и значки трея" };
         tray.Label.FontFamily = new FontFamily("Segoe MDL2 Assets");
-        tray.Click += RevealTray;
+        tray.Click += () => ShowTasksFlyout(tray);
 
         netChip.Label.FontFamily = new FontFamily("Segoe MDL2 Assets");
         netChip.Click += ShowNetworkFlyout;
@@ -406,7 +407,8 @@ public sealed class BarWindow : Window
         if (launch != null)
             f.Row(null, it.Windows.Count == 0 ? "Открыть" : "Открыть ещё одно окно", () => AppUtil.Launch(launch));
 
-        if (it.Pinned)
+        bool required = Settings.IsRequired(it.ExePath) || Settings.IsRequired(it.LaunchPath);
+        if (it.Pinned && !required)
         {
             var key = it.Key;
             f.Row(null, "Открепить от бара", () =>
@@ -416,7 +418,7 @@ public sealed class BarWindow : Window
                 Refresh();
             });
         }
-        else if (!it.Uwp && it.ExePath != null)
+        else if (!it.Pinned && !it.Uwp && it.ExePath != null)
         {
             var exe = it.ExePath;
             f.Row(null, "Закрепить на баре", () =>
@@ -434,6 +436,14 @@ public sealed class BarWindow : Window
             {
                 foreach (var h in all) Native.PostClose(h);
             });
+        }
+
+        if (it.Windows.Count > 0)
+        {
+            var wins = it.Windows.ToList();
+            var exe = it.ExePath;
+            f.Separator();
+            f.Row(null, "Завершить задачу", () => Native.EndTask(wins, exe));
         }
 
         Open(f);
@@ -595,6 +605,90 @@ public sealed class BarWindow : Window
         f.Separator();
         f.Row(null, "Параметры питания", () => AppUtil.Launch("ms-settings:batterysaver"));
         Open(f);
+    }
+
+    /// <summary>Фоновые программы (то, что висит в трее) с возможностью завершить задачу.</summary>
+    void ShowTasksFlyout(FrameworkElement target)
+    {
+        var f = new Flyout(target, AtTop);
+        f.Section("Фоновые приложения");
+        var slot = f.Slot();
+        f.Text("Загрузка…", 13, "MutedBrush", false, slot);
+        f.Separator();
+        f.Row(null, "Значки трея Windows (на 12 секунд)", RevealTray);
+        f.Row(null, "Диспетчер задач", () => AppUtil.Launch("taskmgr.exe"));
+        Open(f);
+
+        var shown = new HashSet<string>(items.Keys);
+        Task.Run(() => Native.BackgroundApps(shown)).ContinueWith(task =>
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (!f.IsOpen) return;
+                slot.Children.Clear();
+                if (task.IsFaulted || task.Result.Count == 0)
+                {
+                    f.Text("Фоновых приложений нет", 13, "MutedBrush", false, slot);
+                    return;
+                }
+                var grid = new WrapPanel { MaxWidth = 300, Margin = new Thickness(4, 2, 4, 2) };
+                foreach (var p in task.Result)
+                    grid.Children.Add(BackgroundTile(p, grid));
+                f.Add(grid, slot);
+            }));
+        });
+    }
+
+    /// <summary>Значок фонового приложения: название при наведении, крестик для завершения задачи.</summary>
+    FrameworkElement BackgroundTile(Native.ProcInfo info, WrapPanel owner)
+    {
+        var img = new Image { Source = AppUtil.GetIcon(info.Path) ?? AppUtil.DefaultIcon(), Width = 30, Height = 30 };
+        RenderOptions.SetBitmapScalingMode(img, BitmapScalingMode.HighQuality);
+
+        var x = new Border
+        {
+            Width = 18,
+            Height = 18,
+            CornerRadius = new CornerRadius(9),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Cursor = Cursors.Hand,
+            Visibility = Visibility.Collapsed,
+            ToolTip = "Завершить задачу",
+            Child = new TextBlock { Text = "✕", FontSize = 10, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White },
+        };
+        x.Background = new SolidColorBrush(Color.FromRgb(0xE0, 0x4B, 0x5A));
+
+        var cell = new Grid { Width = 56, Height = 56 };
+        cell.Children.Add(img);
+        cell.Children.Add(x);
+
+        var tile = new Border
+        {
+            CornerRadius = new CornerRadius(12),
+            Margin = new Thickness(2),
+            Background = Brushes.Transparent,
+            Child = cell,
+            ToolTip = info.Name + (info.Pids.Length > 1 ? " (процессов: " + info.Pids.Length + ")" : "") + "\n" + info.MemMb + " МБ",
+        };
+        ToolTipService.SetInitialShowDelay(tile, 150);
+        tile.MouseEnter += (_, _) =>
+        {
+            tile.Dyn(Border.BackgroundProperty, "HoverBrush");
+            x.Visibility = Visibility.Visible;
+        };
+        tile.MouseLeave += (_, _) =>
+        {
+            tile.Background = Brushes.Transparent;
+            x.Visibility = Visibility.Collapsed;
+        };
+        x.MouseLeftButtonUp += (_, e) =>
+        {
+            e.Handled = true;
+            Native.EndProcesses(info.Pids);
+            owner.Children.Remove(tile);
+        };
+        return tile;
     }
 
     /// <summary>Показывает настоящую панель Windows на несколько секунд — там значки трея и фоновых приложений.</summary>
@@ -816,8 +910,8 @@ public sealed class BarWindow : Window
 
             // над окном на весь экран (игра, видео) бар не торчит
             bool fullscreen = Native.IsForegroundFullscreen();
-            if (fullscreen && Topmost) Topmost = false;
-            else if (!fullscreen && !Topmost) Topmost = true;
+            if (fullscreen && IsVisible) Hide();
+            else if (!fullscreen && !IsVisible) Show();
 
             Refresh();
         }

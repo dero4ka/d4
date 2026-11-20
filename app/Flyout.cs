@@ -64,6 +64,9 @@ public sealed class Flyout
         return p;
     }
 
+    /// <summary>Добавляет в карточку любой свой элемент.</summary>
+    public void Add(UIElement element, StackPanel? into = null) => Target(into).Children.Add(element);
+
     StackPanel Target(StackPanel? into) => into ?? body;
 
     /// <summary>Маленький серый заголовок раздела.</summary>

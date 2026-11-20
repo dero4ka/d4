@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -128,15 +129,20 @@ internal sealed class LauncherWindow : Window
     readonly Queue<(Image Img, string Path)> iconQueue = new();
     int sel;
     bool pumping;
+    int searchVersion;
+    StackPanel? fileSlot;
+    int fileInsertAt;
     Flyout? power;
 
     public LauncherWindow(Settings settings)
     {
         s = settings;
 
+        bool glass = ThemeManager.Glass;
         WindowStyle = WindowStyle.None;
-        AllowsTransparency = true;
-        Background = Brushes.Transparent;
+        AllowsTransparency = !glass; // со стеклом окно обычное: прозрачное окно не умеет размытие
+        if (glass) this.Dyn(BackgroundProperty, "BgBrush");
+        else Background = Brushes.Transparent;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
         Topmost = true;
@@ -144,18 +150,20 @@ internal sealed class LauncherWindow : Window
         Title = "D4 Launcher";
 
         double sw = SystemParameters.PrimaryScreenWidth, sh = SystemParameters.PrimaryScreenHeight;
-        Width = 600;
-        Height = Math.Min(720, sh - s.BarHeight - 40);
+        Width = glass ? 568 : 600;
+        Height = Math.Min(720, sh - s.BarHeight - 40) - (glass ? 32 : 0);
         Left = (sw - Width) / 2;
         Top = s.BarEdge == "Bottom" ? sh - s.BarHeight - Height - 4 : s.BarHeight + 4;
 
-        card.Margin = new Thickness(16);
-        card.CornerRadius = new CornerRadius(20);
+        card.Margin = glass ? new Thickness(0) : new Thickness(16);
+        card.CornerRadius = glass ? new CornerRadius(0) : new CornerRadius(20);
         card.BorderThickness = new Thickness(1);
-        card.Effect = new DropShadowEffect { BlurRadius = 24, Opacity = .5, ShadowDepth = 4 };
+        if (!glass) card.Effect = new DropShadowEffect { BlurRadius = 24, Opacity = .5, ShadowDepth = 4 };
         card.RenderTransform = slide;
-        card.Dyn(Border.BackgroundProperty, "BgBrush");
+        if (glass) card.Background = Brushes.Transparent;
+        else card.Dyn(Border.BackgroundProperty, "BgBrush");
         card.Dyn(Border.BorderBrushProperty, "CardBorderBrush");
+        if (glass) GlassFx.Attach(this, true);
 
         var grid = new Grid();
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -299,6 +307,8 @@ internal sealed class LauncherWindow : Window
         rows.Clear();
         iconQueue.Clear();
         sel = 0;
+        searchVersion++;
+        fileSlot = null;
 
         var apps = AppCatalog.Get();
 
@@ -330,6 +340,10 @@ internal sealed class LauncherWindow : Window
                 foreach (var a in found) AddRow(a.Name, a.Path);
             }
 
+            fileSlot = new StackPanel();
+            fileInsertAt = rows.Count;
+            list.Children.Add(fileSlot);
+
             Section("Ещё");
             bool looksLikePath = q.Contains('\\') || q.Contains('/') || q.Contains("://") || q.StartsWith("www.", StringComparison.OrdinalIgnoreCase);
             if (looksLikePath || (found.Count == 0 && File.Exists(q)))
@@ -339,6 +353,39 @@ internal sealed class LauncherWindow : Window
 
         Highlight();
         PumpIcons();
+        if (q.Length >= 2) StartFileSearch(q);
+    }
+
+    void StartFileSearch(string q)
+    {
+        int v = searchVersion;
+        Task.Run(async () =>
+        {
+            await Task.Delay(250); // ждём, пока человек допечатает
+            if (v != searchVersion) return new List<(string Path, bool Dir)>();
+            return FileSearch.Find(q, () => v != searchVersion);
+        }).ContinueWith(t =>
+        {
+            if (t.IsFaulted) return;
+            var result = t.Result;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (v != searchVersion || fileSlot == null || result.Count == 0) return;
+                var header = Ui.Text("Папки и файлы", 12, "MutedBrush", true);
+                header.Margin = new Thickness(10, 10, 10, 4);
+                fileSlot.Children.Add(header);
+                int k = 0;
+                foreach (var (path, dir) in result)
+                {
+                    var name = System.IO.Path.GetFileName(path);
+                    if (name.Length == 0) name = path;
+                    var shownName = name + "   " + System.IO.Path.GetDirectoryName(path);
+                    AddRow(shownName, path, dir ? "\uE8B7" : null, fileSlot, fileInsertAt + k++);
+                }
+                Highlight(false);
+                PumpIcons();
+            }));
+        });
     }
 
     FrameworkElement Tile(string path)
@@ -364,7 +411,7 @@ internal sealed class LauncherWindow : Window
         return b;
     }
 
-    void AddRow(string name, string path, string? icon = null)
+    void AddRow(string name, string path, string? icon = null, StackPanel? into = null, int insertAt = -1)
     {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
@@ -396,15 +443,15 @@ internal sealed class LauncherWindow : Window
             Box = new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(10, 6, 10, 6), Background = Brushes.Transparent, Cursor = Cursors.Hand, Child = grid },
             Run = () => RunAndClose(path),
         };
-        int index = rows.Count;
         row.Box.MouseEnter += (_, _) =>
         {
-            sel = index;
+            sel = rows.IndexOf(row);
             Highlight(false);
         };
         row.Box.MouseLeftButtonUp += (_, _) => row.Run();
-        rows.Add(row);
-        list.Children.Add(row.Box);
+        if (insertAt >= 0 && insertAt <= rows.Count) rows.Insert(insertAt, row);
+        else rows.Add(row);
+        (into ?? list).Children.Add(row.Box);
     }
 
     void Highlight(bool scrollTo = true)

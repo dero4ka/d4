@@ -73,8 +73,29 @@ internal static class AppUtil
 {
     static readonly Dictionary<string, ImageSource?> IconCache = new();
 
+    static readonly bool Elevated = IsElevated();
+
+    static bool IsElevated()
+    {
+        try { return new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent()).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator); }
+        catch { return false; }
+    }
+
     public static void Launch(string path)
     {
+        // D4 работает от администратора, а приложения, которые он открывает, не должны получать лишние права —
+        // запуск через Проводник возвращает им обычные права пользователя
+        if (Elevated)
+        {
+            try
+            {
+                var arg = path.EndsWith("explorer.exe", StringComparison.OrdinalIgnoreCase) ? "" : "\"" + path + "\"";
+                Process.Start(new ProcessStartInfo("explorer.exe", arg) { UseShellExecute = false });
+                return;
+            }
+            catch { /* запустим напрямую */ }
+        }
+
         try
         {
             Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });

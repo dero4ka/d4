@@ -37,6 +37,7 @@ public sealed class SettingsWindow : Window
 
         Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = page };
 
+        GlassFx.Attach(this);
         BuildThemes();
         BuildBar();
         BuildWidgets();
@@ -118,6 +119,7 @@ public sealed class SettingsWindow : Window
             wrap.Children.Add(chip);
         }
         body.Children.Add(wrap);
+        Check(body, "Режим стекла (прозрачные панели с размытием, как в iOS)", s.Glass, v => s.Glass = v);
     }
 
     void BuildBar()
@@ -188,7 +190,7 @@ public sealed class SettingsWindow : Window
             if (pinned.SelectedItem is string sel)
             {
                 var path = s.Pinned.FirstOrDefault(p => System.IO.Path.GetFileName(p) == sel);
-                if (path != null) s.Pinned.Remove(path);
+                if (path != null && !Settings.IsRequired(path)) s.Pinned.Remove(path);
                 RefreshPinned();
                 Commit();
             }
@@ -261,8 +263,7 @@ public sealed class SettingsWindow : Window
         bool auto = false;
         try
         {
-            using var key = Registry.CurrentUser.OpenSubKey(RunKey);
-            auto = key?.GetValue(RunName) != null;
+            auto = Schtasks("/Query /TN D4") == 0;
         }
         catch { /* нет доступа к реестру */ }
 
@@ -275,22 +276,44 @@ public sealed class SettingsWindow : Window
         body.Children.Add(cb);
     }
 
+    /// <summary>Автозапуск через планировщик: так D4 стартует с правами администратора без окна UAC.</summary>
+    static int Schtasks(string args)
+    {
+        try
+        {
+            using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("schtasks", args)
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            });
+            if (p == null) return -1;
+            p.StandardOutput.ReadToEnd();
+            p.WaitForExit(8000);
+            return p.ExitCode;
+        }
+        catch { return -1; }
+    }
+
     static void SetAutostart(bool on)
     {
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
-            if (key == null) return;
-            if (on)
-            {
-                var exe = Environment.ProcessPath;
-                if (!string.IsNullOrEmpty(exe)) key.SetValue(RunName, "\"" + exe + "\"");
-            }
-            else
-            {
-                key.DeleteValue(RunName, throwOnMissingValue: false);
-            }
+            key?.DeleteValue(RunName, throwOnMissingValue: false); // старый способ автозапуска
         }
         catch { /* игнорируем */ }
+
+        if (on)
+        {
+            var exe = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(exe))
+                Schtasks("/Create /TN D4 /TR \"\\\"" + exe + "\\\"\" /SC ONLOGON /RL HIGHEST /F");
+        }
+        else
+        {
+            Schtasks("/Delete /TN D4 /F");
+        }
     }
 }

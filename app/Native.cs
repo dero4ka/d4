@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -52,6 +53,17 @@ internal static class Native
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
     [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h, uint cmd);
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
+    [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr h, uint flags);
+    [DllImport("user32.dll")] static extern bool GetMonitorInfo(IntPtr monitor, ref MONITORINFO info);
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder sb, int max);
     [DllImport("user32.dll")] static extern int GetWindowTextLength(IntPtr h);
@@ -453,17 +465,116 @@ internal static class Native
         return r.left <= 0 && r.top <= 0 && r.right >= GetSystemMetrics(SM_CXSCREEN) && r.bottom >= GetSystemMetrics(SM_CYSCREEN);
     }
 
-    /// <summary>true, если на переднем плане окно, закрывающее весь экран целиком (игра, видео на весь экран) — бар в это время уступает ему место.</summary>
+    /// <summary>true, если на переднем плане окно закрывает монитор целиком (игра, полноэкранное видео в браузере) — бар прячется.</summary>
     public static bool IsForegroundFullscreen()
     {
         var h = GetForegroundWindow();
-        if (h == IntPtr.Zero) return false;
+        if (h == IntPtr.Zero || IsIconic(h)) return false;
         var cls = ClassName(h);
         if (cls is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") return false;
         GetWindowThreadProcessId(h, out uint pid);
         if (pid == (uint)Environment.ProcessId) return false;
         if (!GetWindowRect(h, out var r)) return false;
+
+        var mon = MonitorFromWindow(h, 2); // MONITOR_DEFAULTTONEAREST
+        var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+        if (mon != IntPtr.Zero && GetMonitorInfo(mon, ref mi))
+            return r.left <= mi.rcMonitor.left && r.top <= mi.rcMonitor.top && r.right >= mi.rcMonitor.right && r.bottom >= mi.rcMonitor.bottom;
+
         return r.left <= 0 && r.top <= 0 && r.right >= GetSystemMetrics(SM_CXSCREEN) && r.bottom >= GetSystemMetrics(SM_CYSCREEN);
+    }
+
+    // ---------- завершение задач ----------
+
+    public sealed record ProcInfo(string Name, string Path, int[] Pids, long MemMb);
+
+    static bool IsExplorer(string? exe) =>
+        exe != null && string.Equals(System.IO.Path.GetFileName(exe), "explorer.exe", StringComparison.OrdinalIgnoreCase);
+
+    static void KillPid(int pid)
+    {
+        try
+        {
+            if (pid == Environment.ProcessId) return;
+            using var p = Process.GetProcessById(pid);
+            p.Kill(true);
+        }
+        catch (Exception ex)
+        {
+            Settings.Log("kill " + pid + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>Завершает приложение, которому принадлежат окна. Окна Проводника только закрываются: иначе пропала бы вся оболочка Windows.</summary>
+    public static void EndTask(IEnumerable<IntPtr> windows, string? exe)
+    {
+        if (IsExplorer(exe))
+        {
+            foreach (var w in windows) PostClose(w);
+            return;
+        }
+        var pids = new HashSet<uint>();
+        foreach (var w in windows)
+        {
+            GetWindowThreadProcessId(w, out uint pid);
+            if (pid != 0) pids.Add(pid);
+        }
+        foreach (var pid in pids) KillPid((int)pid);
+    }
+
+    public static void EndProcesses(IEnumerable<int> pids)
+    {
+        foreach (var pid in pids) KillPid(pid);
+    }
+
+    static string FriendlyName(string path, string fallback)
+    {
+        try
+        {
+            var d = FileVersionInfo.GetVersionInfo(path).FileDescription;
+            if (!string.IsNullOrWhiteSpace(d)) return d.Trim();
+        }
+        catch { /* берём имя процесса */ }
+        return fallback;
+    }
+
+    /// <summary>Программы пользователя без окон на баре (фоновые, висящие в трее). Системные процессы Windows не показываются.</summary>
+    public static List<ProcInfo> BackgroundApps(HashSet<string> shownExes)
+    {
+        var result = new Dictionary<string, (List<int> Pids, long Mem, string Name)>(StringComparer.OrdinalIgnoreCase);
+        var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+        int session = Process.GetCurrentProcess().SessionId;
+
+        foreach (var p in Process.GetProcesses())
+        {
+            try
+            {
+                if (p.Id == Environment.ProcessId || p.SessionId != session) continue;
+                var path = p.MainModule?.FileName;
+                if (string.IsNullOrEmpty(path)) continue;
+                if (path.StartsWith(windows, StringComparison.OrdinalIgnoreCase)) continue;
+                if (shownExes.Contains(path.ToLowerInvariant())) continue;
+
+                if (!result.TryGetValue(path, out var e)) e = (new List<int>(), 0, FriendlyName(path, p.ProcessName));
+                e.Pids.Add(p.Id);
+                e.Mem += p.WorkingSet64;
+                result[path] = e;
+            }
+            catch
+            {
+                // нет доступа к процессу — пропускаем
+            }
+            finally
+            {
+                p.Dispose();
+            }
+        }
+
+        return result
+            .Select(kv => new ProcInfo(kv.Value.Name, kv.Key, kv.Value.Pids.ToArray(), kv.Value.Mem / 1024 / 1024))
+            .OrderByDescending(x => x.MemMb)
+            .Take(16)
+            .ToList();
     }
 
     // ---------- нагрузка системы ----------

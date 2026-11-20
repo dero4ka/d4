@@ -127,10 +127,10 @@ public sealed class WallpaperService
     static string RenderScene(Theme t, int w, int h)
     {
         Directory.CreateDirectory(Settings.DataDir);
-        var file = Path.Combine(Settings.DataDir, $"scene-{t.Id}-{w}x{h}.png");
+        var file = Path.Combine(Settings.DataDir, $"scene-{t.Id}-v3-{w}x{h}.png");
         if (File.Exists(file)) return file; // тот же пейзаж того же размера уже нарисован
 
-        var host = new Border { Width = w, Height = h, Child = SceneFactory.Build(t) };
+        var host = new Border { Width = w, Height = h, Child = SceneFactory.BuildWallpaper(t, w, h) };
         host.Measure(new Size(w, h));
         host.Arrange(new Rect(0, 0, w, h));
         host.UpdateLayout();

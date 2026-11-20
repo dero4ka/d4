@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Windows.Threading;
 
@@ -18,6 +19,9 @@ public sealed class MiniFolder
 public sealed class Settings
 {
     public string Theme { get; set; } = "ocean";
+
+    /// <summary>Режим стекла (прозрачные размытые панели).</summary>
+    public bool Glass { get; set; }
 
     /// <summary>Версия формата настроек (нужна, чтобы перенести старые значения).</summary>
     public int SettingsVersion { get; set; }
@@ -58,6 +62,43 @@ public sealed class Settings
     public List<MiniFolder> Folders { get; set; } = new();
     public Dictionary<string, double[]> Positions { get; set; } = new();
 
+    // ---------- обязательные закрепления ----------
+
+    static string EdgePath()
+    {
+        foreach (var root in new[]
+                 {
+                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                 })
+        {
+            var p = Path.Combine(root, "Microsoft", "Edge", "Application", "msedge.exe");
+            if (File.Exists(p)) return p;
+        }
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft", "Edge", "Application", "msedge.exe");
+    }
+
+    /// <summary>Приложения, которые всегда закреплены на баре: Проводник и Microsoft Edge.</summary>
+    public static string[] RequiredPins() => new[]
+    {
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"),
+        EdgePath(),
+    };
+
+    public static bool IsRequired(string? path) =>
+        !string.IsNullOrEmpty(path) && RequiredPins().Any(r => string.Equals(r, path, StringComparison.OrdinalIgnoreCase));
+
+    void EnsureRequired()
+    {
+        int at = 0;
+        foreach (var req in RequiredPins())
+        {
+            int i = Pinned.FindIndex(p => string.Equals(p, req, StringComparison.OrdinalIgnoreCase));
+            if (i < 0) Pinned.Insert(at, req);
+            at++;
+        }
+    }
+
     // ---------- хранение ----------
 
     static readonly string Dir = Path.Combine(
@@ -78,12 +119,15 @@ public sealed class Settings
                 {
                     // бар должен полностью заменять панель задач — для старых настроек включаем скрытие
                     if (loaded.SettingsVersion < 2) { loaded.HideTaskbar = true; loaded.SettingsVersion = 2; }
+                    loaded.EnsureRequired();
                     return loaded;
                 }
             }
         }
         catch { /* битый файл — начинаем с настроек по умолчанию */ }
-        return new Settings { SettingsVersion = 2 };
+        var fresh = new Settings { SettingsVersion = 2 };
+        fresh.EnsureRequired();
+        return fresh;
     }
 
     public void Save()

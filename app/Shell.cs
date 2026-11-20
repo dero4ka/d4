@@ -29,6 +29,7 @@ public sealed class Shell
 
     public void Start()
     {
+        ThemeManager.InitGlass(s.Glass);
         ThemeManager.Apply(s.Theme);
         BuildTray();
         Reapply();
@@ -53,6 +54,7 @@ public sealed class Shell
     {
         if (exiting) return;
 
+        ThemeManager.SetGlass(s.Glass);
         wallpaper.Apply();
 
         // системные окна Windows — в цвета темы
