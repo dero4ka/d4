@@ -106,12 +106,12 @@ if (Ask-Yes "Собрать D4.exe и выложить в Releases (для кн�
         Write-Host "Нет .NET SDK. Сначала запустите install-d4.bat, потом повторите выкладку." -ForegroundColor Yellow
     } else {
         $dist = Join-Path $Root "dist"
-        & dotnet publish (Join-Path $Root "app\D4.csproj") -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o $dist
+        & dotnet publish (Join-Path $Root "app\D4.csproj") -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:Version=1.1.0 -o $dist
         $exe = Join-Path $dist "D4.exe"
         if ($LASTEXITCODE -eq 0 -and (Test-Path $exe)) {
-            & gh release create "v0.1.0" $exe --repo "$user/$repo" --title "D4 0.1.0" --notes "First D4 release: bar, widgets, themes, wallpapers, mini-folders."
+            & gh release create "v1.1.0" $exe --repo "$user/$repo" --title "D4 1.1.0" --notes "D4 1.1: custom bar and start menu with search, task view, widgets, 8 themes, glass mode, animated wallpapers, mini-folders."
             if ($LASTEXITCODE -ne 0) {
-                & gh release upload "v0.1.0" $exe --repo "$user/$repo" --clobber
+                & gh release upload "v1.1.0" $exe --repo "$user/$repo" --clobber
             }
             Write-Host "[ok] Релиз выложен: https://github.com/$user/$repo/releases" -ForegroundColor Green
         } else {

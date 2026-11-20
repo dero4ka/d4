@@ -47,8 +47,29 @@ public sealed class Flyout
     public void Show()
     {
         card.Opacity = 0;
-        slide.Y = fromY;
+        slide.Y = 0;
         popup.IsOpen = true;
+        if (ThemeManager.Glass)
+        {
+            card.CornerRadius = new CornerRadius(24);
+            // панель ещё прозрачна: снимаем фон под ней, размываем и ставим как стекло
+            card.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+            {
+                card.UpdateLayout();
+                var brush = GlassBackdrop.Bake(card);
+                if (brush != null) card.Background = brush;
+                Animate();
+            }));
+        }
+        else
+        {
+            Animate();
+        }
+    }
+
+    void Animate()
+    {
+        slide.Y = fromY;
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         card.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170)));
         slide.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(fromY, 0, TimeSpan.FromMilliseconds(230)) { EasingFunction = ease });

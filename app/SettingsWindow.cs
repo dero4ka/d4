@@ -219,6 +219,7 @@ public sealed class SettingsWindow : Window
     {
         var body = Section("Обои");
         Check(body, "Менять обои Windows на обои D4", s.WallpaperEnabled, v => s.WallpaperEnabled = v);
+        Check(body, "Живые обои: частицы поверх картинки (пузыри, угольки, светлячки…)", s.AnimatedWallpaper, v => s.AnimatedWallpaper = v);
 
         var current = Ui.Text(string.IsNullOrWhiteSpace(s.WallpaperPath) ? "Сейчас: пейзаж темы" : "Сейчас: " + System.IO.Path.GetFileName(s.WallpaperPath), 13, "MutedBrush");
         current.Margin = new Thickness(0, 6, 0, 6);

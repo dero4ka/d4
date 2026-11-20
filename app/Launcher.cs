@@ -138,11 +138,9 @@ internal sealed class LauncherWindow : Window
     {
         s = settings;
 
-        bool glass = ThemeManager.Glass;
         WindowStyle = WindowStyle.None;
-        AllowsTransparency = !glass; // со стеклом окно обычное: прозрачное окно не умеет размытие
-        if (glass) this.Dyn(BackgroundProperty, "BgBrush");
-        else Background = Brushes.Transparent;
+        AllowsTransparency = true;
+        Background = Brushes.Transparent;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
         Topmost = true;
@@ -150,20 +148,18 @@ internal sealed class LauncherWindow : Window
         Title = "D4 Launcher";
 
         double sw = SystemParameters.PrimaryScreenWidth, sh = SystemParameters.PrimaryScreenHeight;
-        Width = glass ? 568 : 600;
-        Height = Math.Min(720, sh - s.BarHeight - 40) - (glass ? 32 : 0);
+        Width = 600;
+        Height = Math.Min(720, sh - s.BarHeight - 40);
         Left = (sw - Width) / 2;
         Top = s.BarEdge == "Bottom" ? sh - s.BarHeight - Height - 4 : s.BarHeight + 4;
 
-        card.Margin = glass ? new Thickness(0) : new Thickness(16);
-        card.CornerRadius = glass ? new CornerRadius(0) : new CornerRadius(20);
+        card.Margin = new Thickness(16);
+        card.CornerRadius = new CornerRadius(ThemeManager.Glass ? 30 : 20);
         card.BorderThickness = new Thickness(1);
-        if (!glass) card.Effect = new DropShadowEffect { BlurRadius = 24, Opacity = .5, ShadowDepth = 4 };
+        card.Effect = new DropShadowEffect { BlurRadius = 24, Opacity = .5, ShadowDepth = 4 };
         card.RenderTransform = slide;
-        if (glass) card.Background = Brushes.Transparent;
-        else card.Dyn(Border.BackgroundProperty, "BgBrush");
+        card.Dyn(Border.BackgroundProperty, "BgBrush");
         card.Dyn(Border.BorderBrushProperty, "CardBorderBrush");
-        if (glass) GlassFx.Attach(this, true);
 
         var grid = new Grid();
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -254,6 +250,13 @@ internal sealed class LauncherWindow : Window
             Keyboard.Focus(box);
 
             card.Opacity = 0;
+            slide.Y = 0;
+            if (ThemeManager.Glass)
+            {
+                card.UpdateLayout();
+                var glassBrush = GlassBackdrop.Bake(card);
+                if (glassBrush != null) card.Background = glassBrush;
+            }
             double from = s.BarEdge == "Bottom" ? 14 : -14;
             slide.Y = from;
             card.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170)));
@@ -294,6 +297,23 @@ internal sealed class LauncherWindow : Window
 
     // ---------- список ----------
 
+    const string EnKeys = "qwertyuiop[]asdfghjkl;'zxcvbnm,.";
+    const string RuKeys = "йцукенгшщзхъфывапролджэячсмитьбю";
+
+    /// <summary>Что получилось бы, если бы раскладка была другой («рфздщ» ↔ «hello»).</summary>
+    static string SwapLayout(string q)
+    {
+        var sb = new System.Text.StringBuilder(q.Length);
+        foreach (var ch in q)
+        {
+            int i = EnKeys.IndexOf(ch);
+            if (i >= 0) { sb.Append(RuKeys[i]); continue; }
+            int j = RuKeys.IndexOf(ch);
+            sb.Append(j >= 0 ? EnKeys[j] : ch);
+        }
+        return sb.ToString();
+    }
+
     void Section(string text)
     {
         var t = Ui.Text(text, 12, "MutedBrush", true);
@@ -327,8 +347,9 @@ internal sealed class LauncherWindow : Window
         else
         {
             var ql = q.ToLowerInvariant();
+            var qs = SwapLayout(ql); // запрос, набранный не в той раскладке
             var found = apps
-                .Where(a => a.Name.ToLowerInvariant().Contains(ql))
+                .Where(a => a.Name.ToLowerInvariant().Contains(ql) || a.Name.ToLowerInvariant().Contains(qs))
                 .OrderBy(a => a.Name.ToLowerInvariant().StartsWith(ql) ? 0 : a.Name.ToLowerInvariant().Split(' ').Any(w => w.StartsWith(ql)) ? 1 : 2)
                 .ThenBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase)
                 .Take(30)

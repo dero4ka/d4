@@ -30,6 +30,16 @@ public static class ThemeManager
             "#1A0310", "#7A0F2E", "#E11D48", "#5C0B22", "#3B0716", "#1F030C", "#FFB4C2", 0.8),
         new("ruby",   "Рубин",   true,  "#1B0A12", "#CC2B0F1D", "#FFEEF3", "#D0A3B4", "#FF5C7A", "#C45BFF",
             "#2A0B1C", "#9B2257", "#FF6F91", "#6B1A45", "#46102F", "#260819", "#FFD1DC", 0.5),
+        new("aurora", "Аврора",  true,  "#06141C", "#CC0B2530", "#E9FFF8", "#9CC9C0", "#5CF2C0", "#8F7BFF",
+            "#040B16", "#0B3B4A", "#2A7A7A", "#0F3A44", "#0A2630", "#06151C", "#BFFFE8", 1.0),
+        new("sakura", "Сакура",  false, "#FFF0F5", "#CCFFFFFF", "#3A1B2B", "#8A5A6E", "#FF5C93", "#FF9BC2",
+            "#FFD0E3", "#FFB3D1", "#FFEAF2", "#E88DB0", "#D1678F", "#A8466B", "#FFFFFF", 0.0),
+        new("cosmos", "Космос",  true,  "#060612", "#CC120C30", "#EEEBFF", "#A9A4D6", "#7C8CFF", "#FF6AD5",
+            "#05050F", "#1A1250", "#4B1D7A", "#241A5C", "#150F3A", "#0A0720", "#E7DFFF", 1.0),
+        new("winter", "Зима",    true,  "#0D1B2A", "#CC13283F", "#F0F8FF", "#A3BCD3", "#8EE3FF", "#C9B6FF",
+            "#0B1A2E", "#35608F", "#BBD9F2", "#6E93BA", "#456E99", "#2A4A6E", "#F2FAFF", 0.4),
+        new("storm",  "Гроза",   true,  "#0B1017", "#CC141C28", "#E8F0FA", "#98A8BC", "#5AB0FF", "#9AA8FF",
+            "#0A0F18", "#1F2A3A", "#3E5068", "#2A384A", "#1B2634", "#0F1620", "#BFD3EA", 0.0),
         new("light",  "Светлая", false, "#EAF1FC", "#CCFFFFFF", "#16203A", "#55627D", "#2F6BFF", "#7A4DFF",
             "#7FB0FF", "#BCD7FF", "#F4F8FF", "#6F94D6", "#5578B8", "#3D5C96", "#FFF6C9", 0.0),
     };
@@ -149,10 +159,14 @@ public static class ThemeManager
 
         if (Glass)
         {
-            // стекло: сквозь панели виден рабочий стол, кромка светится
-            SetGrad("BgBrush", Alpha(bg, (byte)(t.Dark ? 0x9A : 0xB8)), Alpha(bg2, (byte)(t.Dark ? 0x72 : 0x90)), animate);
-            SetGrad("CardBrush", t.Dark ? C("#3CFFFFFF") : C("#A0FFFFFF"), t.Dark ? C("#16FFFFFF") : C("#58FFFFFF"), animate);
-            SetGrad("CardBorderBrush", t.Dark ? C("#B0FFFFFF") : C("#F0FFFFFF"), t.Dark ? C("#24FFFFFF") : C("#60FFFFFF"), animate);
+            // стекло окрашено в цвета темы: фон и кромка берут оттенок акцента
+            var acc = C(t.Accent);
+            var acc2 = C(t.Accent2);
+            var tintA = Lerp(bg, acc, 0.28);
+            var tintB = Lerp(bg2, acc2, 0.30);
+            SetGrad("BgBrush", Alpha(tintA, (byte)(t.Dark ? 0x72 : 0x96)), Alpha(tintB, (byte)(t.Dark ? 0x52 : 0x78)), animate);
+            SetGrad("CardBrush", Alpha(Lerp(acc, Colors.White, t.Dark ? .15 : .55), (byte)(t.Dark ? 0x44 : 0x8C)), Alpha(acc2, (byte)(t.Dark ? 0x1C : 0x44)), animate);
+            SetGrad("CardBorderBrush", Alpha(Lerp(acc, Colors.White, .62), 0xE0), Alpha(acc2, (byte)(t.Dark ? 0x40 : 0x70)), animate);
         }
         else
         {
@@ -168,6 +182,7 @@ public static class ThemeManager
 
         var hover = C(t.Accent);
         hover.A = 0x40;
+        if (Glass) hover = Alpha(Lerp(C(t.Accent), Colors.White, .35), (byte)(t.Dark ? 0x40 : 0x66));
         SetBrush("HoverBrush", hover, animate);
 
         try

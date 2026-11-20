@@ -57,10 +57,22 @@ public abstract class WidgetWindow : Window
         MouseLeftButtonDown += OnDrag;
         LocationChanged += (_, _) =>
         {
+            QueueGlass(450); // стекло переснимается, когда окно остановилось
             S.Positions[key] = new[] { Left, Top };
             S.SaveSoon();
         };
-        Loaded += (_, _) => SendBack();
+        Loaded += (_, _) =>
+        {
+            SendBack();
+            QueueGlass(600);
+        };
+        ThemeManager.Changed += OnThemeForGlass;
+        Closed += (_, _) =>
+        {
+            ThemeManager.Changed -= OnThemeForGlass;
+            glassTimer?.Stop();
+        };
+        SizeChanged += (_, _) => QueueGlass(500);
         Deactivated += (_, _) => SendBack();
     }
 
@@ -84,6 +96,59 @@ public abstract class WidgetWindow : Window
         base.OnSourceInitialized(e);
         hwnd = new WindowInteropHelper(this).Handle;
         Native.AddExStyle(hwnd, Native.WS_EX_TOOLWINDOW); // не показывать в Alt+Tab
+    }
+
+    // ---------- стекло ----------
+
+    DispatcherTimer? glassTimer;
+    bool glassBusy;
+
+    void OnThemeForGlass() => QueueGlass(1500); // даём обоям смениться и доиграть плавный переход
+
+    void QueueGlass(int delayMs)
+    {
+        if (!IsLoaded) return;
+        glassTimer ??= new DispatcherTimer();
+        glassTimer.Stop();
+        glassTimer.Interval = TimeSpan.FromMilliseconds(delayMs);
+        glassTimer.Tick -= GlassTick;
+        glassTimer.Tick += GlassTick;
+        glassTimer.Start();
+    }
+
+    void GlassTick(object? sender, EventArgs e)
+    {
+        glassTimer?.Stop();
+        if (!ThemeManager.Glass)
+        {
+            Card.Dyn(Border.BackgroundProperty, "CardBrush");
+            return;
+        }
+        if (glassBusy || !IsVisible) return;
+
+        glassBusy = true;
+        var card = Card;
+        var box = card;
+        // на секунду прячем окно, чтобы в снимок попало только то, что под ним
+        Hide();
+        var wait = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        wait.Tick += (_, _) =>
+        {
+            wait.Stop();
+            try
+            {
+                var brush = GlassBackdrop.Bake(box);
+                if (brush != null) card.Background = brush;
+                else card.Dyn(Border.BackgroundProperty, "CardBrush");
+            }
+            finally
+            {
+                Show();
+                SendBack();
+                glassBusy = false;
+            }
+        };
+        wait.Start();
     }
 
     void SendBack()

@@ -50,6 +50,8 @@ public sealed class Settings
 
     // Обои
     public bool WallpaperEnabled { get; set; } = true;
+    /// <summary>Частицы поверх обоев (пузыри, угольки, светлячки и т.д.).</summary>
+    public bool AnimatedWallpaper { get; set; } = true;
     /// <summary>Путь к картинке или видео. Пусто — сцена из текущей темы.</summary>
     public string? WallpaperPath { get; set; }
 

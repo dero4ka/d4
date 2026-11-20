@@ -19,6 +19,7 @@ public sealed class WallpaperService
 
     readonly Settings s;
     WallpaperWindow? video;
+    ParticleWindow? particles;
     string? appliedKey;
 
     public WallpaperService(Settings settings) => s = settings;
@@ -30,6 +31,7 @@ public sealed class WallpaperService
             if (!s.WallpaperEnabled)
             {
                 CloseVideo();
+                CloseParticles();
                 Restore();
                 return;
             }
@@ -42,11 +44,14 @@ public sealed class WallpaperService
             {
                 ApplyStatic(null);   // под видео — пейзаж темы на случай, если окно не встроится
                 EnsureVideo(path!);
+                CloseParticles();
             }
             else
             {
                 CloseVideo();
                 ApplyStatic(exists && Array.IndexOf(ImageExt, ext) >= 0 ? path : null);
+                if (s.AnimatedWallpaper) EnsureParticles();
+                else CloseParticles();
             }
         }
         catch (Exception ex)
@@ -58,7 +63,29 @@ public sealed class WallpaperService
     public void Shutdown()
     {
         CloseVideo();
+        CloseParticles();
         Restore();
+    }
+
+    // ---------- частицы ----------
+
+    void EnsureParticles()
+    {
+        if (particles != null) return;
+        var w = new ParticleWindow();
+        w.Closed += (sender, _) =>
+        {
+            if (ReferenceEquals(particles, sender)) particles = null;
+        };
+        particles = w;
+        w.Show();
+    }
+
+    void CloseParticles()
+    {
+        var p = particles;
+        particles = null;
+        p?.Close();
     }
 
     // ---------- видео ----------
