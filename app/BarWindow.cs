@@ -56,8 +56,8 @@ public sealed class BarWindow : Window
         Background = Brushes.Transparent,
     };
     readonly TextBlock clock = Ui.Text("", 14, "TextBrush", true);
-    readonly DispatcherTimer guard = new() { Interval = TimeSpan.FromMilliseconds(120) };
-    readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(600) };
+    readonly DispatcherTimer guard = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(1000) };
     readonly EventHandler displayHandler;
     readonly CultureInfo ru = CultureInfo.GetCultureInfo("ru-RU");
 
@@ -901,7 +901,7 @@ public sealed class BarWindow : Window
 
             KeepTaskbarHidden();
 
-            if (tickCount++ % 8 == 0)
+            if (tickCount++ % 5 == 0)
             {
                 UpdateNetwork();
                 UpdateAudio();

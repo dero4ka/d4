@@ -72,6 +72,25 @@ public sealed class SettingsWindow : Window
         return body;
     }
 
+    void Field(StackPanel into, string label, string value, Action<string> set)
+    {
+        var l = Ui.Text(label, 12, "MutedBrush");
+        l.Margin = new Thickness(0, 8, 0, 2);
+        into.Children.Add(l);
+
+        var tb = new TextBox { Text = value, Padding = new Thickness(8, 5, 8, 5), FontSize = 14, BorderThickness = new Thickness(1) };
+        tb.SetResourceReference(Control.ForegroundProperty, "TextBrush");
+        tb.SetResourceReference(TextBox.CaretBrushProperty, "TextBrush");
+        tb.SetResourceReference(Control.BackgroundProperty, "HoverBrush");
+        tb.SetResourceReference(Control.BorderBrushProperty, "CardBorderBrush");
+        tb.LostFocus += (_, _) =>
+        {
+            set(tb.Text.Trim());
+            Commit();
+        };
+        into.Children.Add(tb);
+    }
+
     CheckBox Check(StackPanel into, string text, bool value, Action<bool> set)
     {
         var cb = new CheckBox { Content = text, IsChecked = value, Margin = new Thickness(0, 4, 0, 4), FontSize = 14 };
@@ -210,6 +229,19 @@ public sealed class SettingsWindow : Window
         Check(body, "Часы", s.ClockWidget, v => s.ClockWidget = v);
         Check(body, "Монитор ресурсов (процессор и память)", s.MonitorWidget, v => s.MonitorWidget = v);
         Check(body, "Заметки", s.NotesWidget, v => s.NotesWidget = v);
+        foreach (var info in WidgetCatalog.All)
+        {
+            var id = info.Id;
+            Check(body, info.Name, s.ExtraWidgets.Contains(id), v =>
+            {
+                if (v) { if (!s.ExtraWidgets.Contains(id)) s.ExtraWidgets.Add(id); }
+                else s.ExtraWidgets.Remove(id);
+            });
+        }
+        Field(body, "Город для погоды", s.City, v => s.City = v);
+        Field(body, "Валюты (коды через запятую)", s.Currencies, v => s.Currencies = v);
+        Field(body, "Репозиторий GitHub (владелец/имя)", s.GithubRepo, v => s.GithubRepo = v);
+        Field(body, "ID сервера Discord (в настройках сервера должен быть включён виджет)", s.DiscordGuild, v => s.DiscordGuild = v);
         var hint = Ui.Text("Виджеты можно перетаскивать мышью — положение запоминается.", 12, "MutedBrush");
         hint.Margin = new Thickness(0, 6, 0, 0);
         body.Children.Add(hint);
@@ -220,6 +252,29 @@ public sealed class SettingsWindow : Window
         var body = Section("Обои");
         Check(body, "Менять обои Windows на обои D4", s.WallpaperEnabled, v => s.WallpaperEnabled = v);
         Check(body, "Живые обои: частицы поверх картинки (пузыри, угольки, светлячки…)", s.AnimatedWallpaper, v => s.AnimatedWallpaper = v);
+
+        var fpsRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 2) };
+        var fpsLabel = Ui.Text("Частота кадров анимации:", 14, "TextBrush");
+        fpsLabel.VerticalAlignment = VerticalAlignment.Center;
+        fpsLabel.Margin = new Thickness(0, 0, 10, 0);
+        fpsRow.Children.Add(fpsLabel);
+        var fpsBox = new ComboBox { Width = 110, FontSize = 14 };
+        foreach (var f in new[] { 10, 15, 24, 30, 45, 60 }) fpsBox.Items.Add(f + " fps");
+        int fpsIndex = Array.IndexOf(new[] { 10, 15, 24, 30, 45, 60 }, s.AnimFps);
+        fpsBox.SelectedIndex = fpsIndex < 0 ? 2 : fpsIndex;
+        fpsBox.SelectionChanged += (_, _) =>
+        {
+            var values = new[] { 10, 15, 24, 30, 45, 60 };
+            if (fpsBox.SelectedIndex < 0) return;
+            s.AnimFps = values[fpsBox.SelectedIndex];
+            ParticleCanvas.Fps = s.AnimFps;
+            Commit();
+        };
+        fpsRow.Children.Add(fpsBox);
+        body.Children.Add(fpsRow);
+        var fpsHint = Ui.Text("Меньше — легче для системы, особенно при включённом стекле.", 12, "MutedBrush");
+        fpsHint.Margin = new Thickness(0, 0, 0, 4);
+        body.Children.Add(fpsHint);
 
         var current = Ui.Text(string.IsNullOrWhiteSpace(s.WallpaperPath) ? "Сейчас: пейзаж темы" : "Сейчас: " + System.IO.Path.GetFileName(s.WallpaperPath), 13, "MutedBrush");
         current.Margin = new Thickness(0, 6, 0, 6);

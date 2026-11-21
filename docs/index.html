@@ -4,310 +4,431 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0f1b3d">
-<title>D4-Site — ваш проект, собранный под вас</title>
-<meta name="description" content="D4-Site — современный одностраничный сайт: живые темы с пейзажами, чёткая структура и лёгкая загрузка.">
+<meta name="theme-color" content="#1b1f27">
+<title>D4 — рабочий стол Windows, собранный под вас</title>
+<meta name="description" content="D4 — программа для Windows 10/11: своя панель вместо панели задач, меню «Пуск» с поиском, 13 тем с живыми обоями, режим стекла и 12 виджетов.">
 <style>
-:root,[data-theme="default"]{
+:root,[data-theme="ocean"]{
   --bg:#0c1228; --card:rgba(255,255,255,.06); --card-b:rgba(255,255,255,.12); --text:#eef2fb; --muted:#a9b4cc;
   --accent:#7fb0ff; --accent2:#a68bff;
   --s1:#0f1b3d; --s2:#3a4fa8; --s3:#8fb4ff;
   --m1:#26356b; --m2:#1b2750; --m3:#121a38; --sun:#cfe0ff;
-  --stars:1; --radius:22px;
+  --stars:1; --radius:22px; --win:rgba(20,26,48,.55);
 }
-[data-theme="sunset"]{--bg:#1e0f1f;--accent:#ff9a6b;--accent2:#ff5f8f;--s1:#3a1c3f;--s2:#d9566f;--s3:#ffb36b;--m1:#7a2c4e;--m2:#4f1d3d;--m3:#2c1230;--sun:#ffe1a8;--stars:.35}
-[data-theme="forest"]{--bg:#08191a;--accent:#6fe0a5;--accent2:#c2ee72;--s1:#0e2a22;--s2:#2f7a5c;--s3:#b8e6b0;--m1:#1f5a45;--m2:#14402f;--m3:#0b2a1f;--sun:#f3ffd0;--stars:.5}
-[data-theme="violet"]{--bg:#0f0822;--accent:#b894ff;--accent2:#ff7ad9;--s1:#150c2e;--s2:#6a2fb5;--s3:#ff7ad9;--m1:#3b1d78;--m2:#2a1457;--m3:#1a0b3a;--sun:#ffd1f3;--stars:1}
-[data-theme="light"]{--bg:#eaf1fc;--card:rgba(255,255,255,.7);--card-b:rgba(30,60,120,.12);--text:#16203a;--muted:#55627d;--accent:#2f6bff;--accent2:#7a4dff;--s1:#7fb0ff;--s2:#bcd7ff;--s3:#f4f8ff;--m1:#6f94d6;--m2:#5578b8;--m3:#3d5c96;--sun:#fff6c9;--stars:0}
+[data-theme="sunset"]{--bg:#1e0f1f;--accent:#ff9a6b;--accent2:#ff5f8f;--s1:#3a1c3f;--s2:#d9566f;--s3:#ffb36b;--m1:#7a2c4e;--m2:#4f1d3d;--m3:#2c1230;--sun:#ffe1a8;--stars:.35;--win:rgba(44,18,48,.55)}
+[data-theme="forest"]{--bg:#08191a;--accent:#6fe0a5;--accent2:#c2ee72;--s1:#0e2a22;--s2:#2f7a5c;--s3:#b8e6b0;--m1:#1f5a45;--m2:#14402f;--m3:#0b2a1f;--sun:#f3ffd0;--stars:.5;--win:rgba(11,42,31,.55)}
+[data-theme="neon"]{--bg:#0f0822;--accent:#b894ff;--accent2:#ff7ad9;--s1:#150c2e;--s2:#6a2fb5;--s3:#ff7ad9;--m1:#3b1d78;--m2:#2a1457;--m3:#1a0b3a;--sun:#ffd1f3;--stars:1;--win:rgba(26,11,58,.55)}
+[data-theme="scarlet"]{--bg:#1a0508;--accent:#ff3b4e;--accent2:#ff8a4c;--s1:#2a0710;--s2:#c42b3c;--s3:#ff8a5b;--m1:#8a1a2b;--m2:#5a1020;--m3:#2e0913;--sun:#ffd7b8;--stars:.3;--win:rgba(46,9,19,.55)}
+[data-theme="crimson"]{--bg:#12030a;--accent:#e11d48;--accent2:#ff6b8a;--s1:#1a0310;--s2:#7a0f2e;--s3:#e11d48;--m1:#5c0b22;--m2:#3b0716;--m3:#1f030c;--sun:#ffb4c2;--stars:.8;--win:rgba(31,3,12,.55)}
+[data-theme="ruby"]{--bg:#1b0a12;--accent:#ff5c7a;--accent2:#c45bff;--s1:#2a0b1c;--s2:#9b2257;--s3:#ff6f91;--m1:#6b1a45;--m2:#46102f;--m3:#260819;--sun:#ffd1dc;--stars:.5;--win:rgba(38,8,25,.55)}
+[data-theme="aurora"]{--bg:#06141c;--accent:#5cf2c0;--accent2:#8f7bff;--s1:#040b16;--s2:#0b3b4a;--s3:#2a7a7a;--m1:#0f3a44;--m2:#0a2630;--m3:#06151c;--sun:#bfffe8;--stars:1;--win:rgba(6,21,28,.55)}
+[data-theme="cosmos"]{--bg:#060612;--accent:#7c8cff;--accent2:#ff6ad5;--s1:#05050f;--s2:#1a1250;--s3:#4b1d7a;--m1:#241a5c;--m2:#150f3a;--m3:#0a0720;--sun:#e7dfff;--stars:1;--win:rgba(10,7,32,.55)}
+[data-theme="winter"]{--bg:#0d1b2a;--accent:#8ee3ff;--accent2:#c9b6ff;--s1:#0b1a2e;--s2:#35608f;--s3:#bbd9f2;--m1:#6e93ba;--m2:#456e99;--m3:#2a4a6e;--sun:#f2faff;--stars:.4;--win:rgba(19,40,63,.55)}
+[data-theme="storm"]{--bg:#0b1017;--accent:#5ab0ff;--accent2:#9aa8ff;--s1:#0a0f18;--s2:#1f2a3a;--s3:#3e5068;--m1:#2a384a;--m2:#1b2634;--m3:#0f1620;--sun:#bfd3ea;--stars:0;--win:rgba(15,22,32,.55)}
+[data-theme="sakura"]{--bg:#fff0f5;--card:rgba(255,255,255,.7);--card-b:rgba(160,60,100,.14);--text:#3a1b2b;--muted:#8a5a6e;--accent:#ff5c93;--accent2:#ff9bc2;--s1:#ffd0e3;--s2:#ffb3d1;--s3:#ffeaf2;--m1:#e88db0;--m2:#d1678f;--m3:#a8466b;--sun:#fff;--stars:0;--win:rgba(255,255,255,.55)}
+[data-theme="light"]{--bg:#eaf1fc;--card:rgba(255,255,255,.7);--card-b:rgba(30,60,120,.12);--text:#16203a;--muted:#55627d;--accent:#2f6bff;--accent2:#7a4dff;--s1:#7fb0ff;--s2:#bcd7ff;--s3:#f4f8ff;--m1:#6f94d6;--m2:#5578b8;--m3:#3d5c96;--sun:#fff6c9;--stars:0;--win:rgba(255,255,255,.55)}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
 body{background:var(--bg);color:var(--text);font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;transition:background .5s,color .5s;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(600px 400px at 90% 20%,color-mix(in srgb,var(--accent2) 18%,transparent),transparent),radial-gradient(700px 500px at 5% 70%,color-mix(in srgb,var(--accent) 16%,transparent),transparent)}
 
-/* scenes (photo-like landscapes drawn from theme colors) */
-.scene{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 58%,var(--s3) 100%);transition:background .5s}
+/* scenes */
+.scene{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 58%,var(--s3) 100%)}
 .scene svg{position:absolute;inset:0;width:100%;height:100%}
 .scene .m1{fill:var(--m1)}.scene .m2{fill:var(--m2)}.scene .m3{fill:var(--m3)}
-.scene .sun{fill:var(--sun)}
-.scene .star{fill:#fff;opacity:calc(var(--stars)*.8)}
-.scene .glow{fill:var(--sun);opacity:.25}
+.scene .sun{fill:var(--sun)}.scene .glow{fill:var(--sun);opacity:.25}
+.scene .star{fill:#fff;opacity:calc(var(--stars)*.8);animation:tw 3.2s ease-in-out infinite}
+.scene .star:nth-child(3n){animation-delay:-1s}.scene .star:nth-child(3n+1){animation-delay:-2.1s}
+@keyframes tw{50%{opacity:calc(var(--stars)*.25)}}
 .scene .ln{stroke:var(--accent2);fill:none;stroke-width:1.5;opacity:.7}
 .scene .bird{fill:none;stroke:var(--m3);stroke-width:2;stroke-linecap:round}
-.scene .cl{fill:#fff;opacity:.85}
-.scene .sunf{fill:var(--sun)}
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(600px 400px at 90% 20%,color-mix(in srgb,var(--accent2) 18%,transparent),transparent),radial-gradient(700px 500px at 5% 70%,color-mix(in srgb,var(--accent) 16%,transparent),transparent);transition:background .5s}
-[data-theme] .scene{transition:none}
+.scene .cl{fill:#fff;opacity:.85}.scene .sunf{fill:var(--sun)}
+.scene .acc{fill:var(--accent)}.scene .acc2{fill:var(--accent2)}
+.scene .rib{animation:wave 9s ease-in-out infinite alternate;transform-origin:center}
+.scene .rib:nth-of-type(2){animation-duration:12s;animation-delay:-4s}
+@keyframes wave{from{transform:translateX(-24px) scaleY(.9)}to{transform:translateX(24px) scaleY(1.12)}}
+.scene canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 /* header */
-header{position:fixed;top:14px;left:0;right:0;z-index:20}
-.nav{display:flex;align-items:center;gap:22px;height:58px;padding:0 20px;border-radius:999px;background:var(--card);border:1px solid var(--card-b);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.logo{font-weight:800;font-size:19px;letter-spacing:.4px}
+header{position:fixed;top:14px;left:0;right:0;z-index:30}
+.nav{display:flex;align-items:center;gap:20px;height:58px;padding:0 14px 0 22px;border-radius:999px;background:var(--card);border:1px solid var(--card-b);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.logo{font-weight:800;font-size:20px;letter-spacing:.4px;display:flex;align-items:center;gap:8px}
 .logo b{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
 .nav ul{display:flex;gap:22px;list-style:none;margin-left:auto;color:var(--muted);font-size:15px}
 .nav ul a{transition:color .2s}.nav ul a:hover{color:var(--text)}
-.btn{display:inline-block;padding:12px 24px;border-radius:999px;font-weight:600;border:1px solid transparent;transition:transform .2s,box-shadow .2s;cursor:pointer;font-size:15px}
+.lang{display:flex;border:1px solid var(--card-b);border-radius:999px;overflow:hidden;font-size:13px;font-weight:700}
+.lang button{background:none;border:0;color:var(--muted);padding:6px 11px;cursor:pointer;font:inherit}
+.lang button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+.gh{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--card-b);transition:transform .2s}
+.gh:hover{transform:translateY(-2px)}
+.btn{display:inline-block;padding:12px 24px;border-radius:999px;font-weight:600;border:1px solid transparent;transition:transform .2s,box-shadow .2s;cursor:pointer;font:600 15px/1.4 inherit;font-family:inherit;color:inherit;background:none}
 .btn:hover{transform:translateY(-2px)}
 .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 10px 30px color-mix(in srgb,var(--accent) 40%,transparent)}
 .btn.ghost{border-color:var(--card-b);background:var(--card);backdrop-filter:blur(10px)}
-.nav .btn{padding:9px 20px}
 
 /* hero */
 .hero{position:relative;padding:170px 0 90px;text-align:center;isolation:isolate}
 .hero-bg{position:absolute;inset:0;z-index:-1;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
-.hero-bg.scene{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%)}
-.badge{display:inline-block;padding:7px 16px;border-radius:999px;background:var(--card);border:1px solid var(--card-b);backdrop-filter:blur(10px);color:var(--text);font-size:14px;margin-bottom:24px}
-h1{font-size:clamp(36px,6.4vw,68px);line-height:1.08;margin-bottom:22px;letter-spacing:-.5px;text-shadow:0 4px 30px rgba(0,0,0,.25)}
+.badge{display:inline-flex;gap:8px;align-items:center;padding:7px 16px;border-radius:999px;background:var(--card);border:1px solid var(--card-b);backdrop-filter:blur(10px);font-size:14px;margin-bottom:24px}
+.badge i{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+h1{font-size:clamp(34px,6vw,66px);line-height:1.08;margin-bottom:22px;letter-spacing:-.5px;text-shadow:0 4px 30px rgba(0,0,0,.25)}
 h1 span{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-[data-theme="light"] h1{text-shadow:none}
-[data-theme="light"] h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text}
-.lead{max-width:660px;margin:0 auto 34px;font-size:19px;color:var(--text);opacity:.88}
+[data-theme="light"] h1,[data-theme="sakura"] h1{text-shadow:none}
+[data-theme="light"] h1 span,[data-theme="sakura"] h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text}
+.lead{max-width:680px;margin:0 auto 34px;font-size:19px;opacity:.9}
 .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.mock{margin:64px auto 0;max-width:900px;aspect-ratio:16/9;border-radius:26px;border:1px solid var(--card-b);box-shadow:0 40px 90px rgba(0,0,0,.45),0 0 0 8px var(--card)}
-.mock .win{position:absolute;border-radius:14px;padding:14px;background:rgba(20,26,48,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 36px rgba(0,0,0,.35);animation:float 7s ease-in-out infinite}
-.mock .w1{left:8%;top:14%;width:44%;height:46%}
-.mock .w2{left:46%;top:30%;width:44%;height:44%;animation-delay:-3s}
-.mock .win i{display:block;height:8px;border-radius:4px;background:#fff;opacity:.35;margin:9px 0}
-.mock .win i:first-child{width:38%;background:var(--accent);opacity:1}
-.mock .win i:nth-child(3){width:70%}.mock .win i:nth-child(4){width:50%}
-@keyframes float{50%{transform:translateY(-8px)}}
-.mock .bar{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;align-items:flex-end;padding:9px 16px;border-radius:20px;background:rgba(15,20,40,.5);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18)}
-.mock .bar span{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.25);transition:transform .2s}
-.mock .bar span:nth-child(2n){background:var(--accent)}.mock .bar span:nth-child(3n){background:var(--accent2)}
-.mock .bar span:hover{transform:translateY(-10px) scale(1.3)}
-.mock .clock{position:absolute;right:20px;top:14px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.4);font-variant-numeric:tabular-nums}
+.splash{margin:60px auto 0;max-width:920px;position:relative}
+
+/* desktop mock (hero + demo) */
+.desk{position:relative;aspect-ratio:16/9;border-radius:26px;border:1px solid var(--card-b);box-shadow:0 40px 90px rgba(0,0,0,.45),0 0 0 8px var(--card);overflow:hidden;text-align:left;color:#fff}
+.desk .topbar{position:absolute;left:0;right:0;top:0;height:7%;min-height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 3%;background:var(--win);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.14);font-size:clamp(10px,1.4vw,14px);z-index:5}
+.desk .topbar b{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;margin-right:12px}
+.desk .startbtn{display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;width:15px;height:15px;cursor:pointer;vertical-align:middle;margin-right:10px}
+.desk .startbtn i{background:var(--accent);border-radius:2px}.desk .startbtn i:nth-child(2n){background:var(--accent2)}
+.win{position:absolute;border-radius:14px;padding:14px;background:var(--win);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 36px rgba(0,0,0,.35);z-index:3}
+.glass .win,.glass .topbar,.glass .dock,.glass .launch{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,rgba(255,255,255,.14)),color-mix(in srgb,var(--accent2) 14%,rgba(255,255,255,.05)));backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);border-color:rgba(255,255,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 14px 40px rgba(0,0,0,.3)}
+.win small{opacity:.7;display:block;font-size:11px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.w-clock{left:4%;top:12%;width:24%;text-align:center}.w-clock b{display:block;font-size:clamp(22px,4.4vw,46px);font-weight:300;line-height:1.1;font-variant-numeric:tabular-nums}
+.w-weather{left:4%;top:40%;width:24%}.w-weather b{font-size:clamp(20px,3.6vw,38px);font-weight:300}
+.w-pomo{right:4%;top:12%;width:24%;text-align:center}.w-pomo b{display:block;font-size:clamp(20px,3.6vw,38px);font-weight:300;font-variant-numeric:tabular-nums}
+.w-pomo button,.w-todo button{margin:4px 2px 0;border:0;border-radius:8px;padding:3px 9px;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:12px}
+.w-todo{right:4%;top:46%;width:30%}.w-todo label{display:flex;gap:6px;font-size:clamp(10px,1.3vw,13px);margin:2px 0}
+.w-todo input[type=text]{width:100%;margin-top:4px;border:0;border-radius:8px;padding:4px 8px;background:rgba(255,255,255,.18);color:#fff;font-size:12px;outline:0}
+.w-todo input::placeholder{color:rgba(255,255,255,.6)}
+.dock{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);display:flex;gap:8px;align-items:flex-end;padding:8px 14px;border-radius:20px;background:var(--win);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);z-index:5}
+.dock span{width:clamp(18px,3.4vw,34px);height:clamp(18px,3.4vw,34px);border-radius:10px;background:rgba(255,255,255,.28);transform-origin:bottom center;transition:transform .12s ease-out;will-change:transform}
+.dock span:nth-child(2n){background:var(--accent)}.dock span:nth-child(3n){background:var(--accent2)}
+.launch{position:absolute;left:3%;top:9%;width:36%;border-radius:18px;padding:12px;background:var(--win);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);z-index:8;opacity:0;transform:translateY(-10px) scale(.98);pointer-events:none;transition:.25s}
+.launch.open{opacity:1;transform:none;pointer-events:auto}
+.launch input{width:100%;border:0;border-radius:12px;padding:8px 12px;background:rgba(255,255,255,.18);color:#fff;font-size:13px;outline:0}
+.launch input::placeholder{color:rgba(255,255,255,.65)}
+.launch ul{list-style:none;margin-top:8px;max-height:150px;overflow:auto}
+.launch li{padding:5px 8px;border-radius:8px;font-size:13px;cursor:pointer}.launch li:hover,.launch li.hit{background:rgba(255,255,255,.18)}
+.demo-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+.chip{border:1px solid var(--card-b);background:var(--card);color:var(--text);border-radius:999px;padding:7px 14px;cursor:pointer;font:600 13px inherit;font-family:inherit;transition:.2s}
+.chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 24%,transparent)}
+.chip:hover{transform:translateY(-2px)}
+.sep{width:1px;height:24px;background:var(--card-b);margin:0 6px}
 
 /* sections */
-section{padding:90px 0}
+section{padding:84px 0}
 .eyebrow{color:var(--accent);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
 h2{font-size:clamp(28px,4.2vw,44px);line-height:1.15;margin-bottom:16px;letter-spacing:-.3px}
-.sub{color:var(--muted);max-width:620px;margin-bottom:44px;font-size:17px}
+.sub{color:var(--muted);max-width:660px;margin-bottom:40px;font-size:17px}
 .grid{display:grid;gap:20px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:28px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .3s,border-color .3s}
-.card:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+a.card:hover,.card.hov:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
 .card h3{font-size:20px;margin-bottom:8px}
 .card p,.card li{color:var(--muted)}
 .card ul{padding-left:18px;margin-top:10px}
+.card .more{display:inline-block;margin-top:14px;color:var(--accent);font-weight:600}
 .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;margin-bottom:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:21px;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 35%,transparent)}
 .compare .bad h3{color:#ff8b8b}.compare .good h3{color:var(--accent)}
+.welcome{display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-radius:28px;padding:34px 38px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 18%,var(--card)),var(--card));border:1px solid var(--card-b)}
+.welcome h2{font-size:clamp(24px,3.2vw,34px);margin-bottom:8px}
+.welcome p{color:var(--muted);max-width:560px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;margin-bottom:24px}
 .stat{padding:30px;text-align:center}
 .stat b{display:block;font-size:46px;line-height:1.2;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
 .stat span{color:var(--muted);font-size:14px}
+.minidock{display:flex;gap:8px;align-items:flex-end;justify-content:center;height:86px;margin-top:18px;border-radius:18px;background:color-mix(in srgb,var(--accent) 8%,transparent);border:1px dashed var(--card-b);padding-bottom:10px}
+.minidock span{width:34px;height:34px;border-radius:10px;background:var(--accent);transform-origin:bottom;transition:transform .12s ease-out}
+.minidock span:nth-child(2n){background:var(--accent2)}.minidock span:nth-child(3n){background:color-mix(in srgb,var(--text) 35%,transparent)}
+pre{margin-top:14px;padding:16px 18px;border-radius:16px;background:rgba(0,0,0,.3);border:1px solid var(--card-b);color:#dfe8ff;font:13px/1.6 ui-monospace,Consolas,monospace;overflow:auto}
+[data-theme="light"] pre,[data-theme="sakura"] pre{background:rgba(255,255,255,.8);color:#2a3350}
 
 /* gallery */
-.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
-.shot{position:relative;aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;border:2px solid transparent;cursor:pointer;color:#fff;text-align:left;font:inherit;padding:0;transition:transform .3s,border-color .3s}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.shot{position:relative;aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;border:2px solid transparent;cursor:pointer;color:#fff;text-align:left;font:inherit;padding:0;transition:transform .3s,border-color .3s;background:none}
 .shot:hover{transform:translateY(-6px) scale(1.01)}
 .shot.on{border-color:var(--accent)}
 .shot .scene{position:absolute;inset:0}
-.shot em{position:absolute;left:0;right:0;bottom:0;padding:60px 18px 16px;font-style:normal;background:linear-gradient(transparent,rgba(0,0,0,.6));font-weight:700;display:flex;justify-content:space-between;align-items:center}
-.shot em small{font-weight:500;opacity:.8}
-.note{margin-top:26px;color:var(--muted);font-size:14px}
-.note code{background:var(--card);padding:2px 8px;border-radius:8px;border:1px solid var(--card-b)}
-
-/* final */
-.final .box{position:relative;overflow:hidden;border-radius:30px;padding:80px 24px;text-align:center;isolation:isolate;border:1px solid var(--card-b)}
+.shot em{position:absolute;left:0;right:0;bottom:0;padding:60px 16px 14px;font-style:normal;background:linear-gradient(transparent,rgba(0,0,0,.62));font-weight:700;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.shot em small{font-weight:500;opacity:.8;font-size:11px}
+.caption{margin-top:14px;color:var(--muted);font-size:14px;text-align:center}
+.tcycle{margin-top:34px}
+/* articles */
+details.card{padding:0}
+details.card summary{list-style:none;cursor:pointer;padding:22px 28px;font-size:19px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"+";font-size:26px;color:var(--accent);transition:transform .3s}
+details.card[open] summary::after{transform:rotate(45deg)}
+details.card .body{padding:0 28px 24px;color:var(--muted)}
+details.card .body p{margin-top:10px}
+.final .box{position:relative;overflow:hidden;border-radius:30px;padding:76px 24px;text-align:center;isolation:isolate;border:1px solid var(--card-b)}
 .final .box .scene{position:absolute;inset:0;z-index:-1}
 .final .box h2,.final .box p{color:#fff;text-shadow:0 3px 20px rgba(0,0,0,.35)}
-.final .box p{margin:0 auto 28px;max-width:520px;opacity:.92}
+.final .box p{margin:0 auto 28px;max-width:540px;opacity:.92}
+.qr{display:grid;place-items:center;font-size:44px}
 footer{padding:40px 0;color:var(--muted);font-size:14px;border-top:1px solid var(--card-b)}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
 .reveal.in{opacity:1;transform:none}
-@media(max-width:720px){.nav ul{display:none}.nav .btn{margin-left:auto}.hero{padding-top:130px}}
+@media(max-width:820px){.nav ul{display:none}.nav .lang{margin-left:auto}.hero{padding-top:130px}.w-weather,.w-todo{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
 </head>
-<body id="top">
-<header><div class="wrap">
-  <div class="nav">
-    <a href="#top" class="logo"><b>D4</b>-Site</a>
-    <ul>
-      <li><a href="#about">Что это</a></li>
-      <li><a href="#features">Возможности</a></li>
-      <li><a href="#light">Лёгкость</a></li>
-      <li><a href="#themes">Темы</a></li>
-    </ul>
-    <a href="#contact" class="btn primary">Связаться</a>
-  </div>
-</div></header>
+<body data-theme="ocean">
+<header><div class="wrap"><nav class="nav">
+  <a class="logo" href="#top"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" rx="3.5" fill="var(--accent)"/><rect x="13" y="2" width="9" height="9" rx="3.5" fill="var(--accent2)"/><rect x="2" y="13" width="9" height="9" rx="3.5" fill="var(--accent2)"/><rect x="13" y="13" width="9" height="9" rx="3.5" fill="var(--accent)"/></svg><b>D4</b></a>
+  <ul><li><a href="#home" data-en="Home">Главная</a></li><li><a href="#demo" data-en="Demo">Демо</a></li><li><a href="#themes" data-en="Themes">Темы</a></li><li><a href="#articles" data-en="Articles">Статьи</a></li></ul>
+  <div class="lang"><button data-l="ru" class="on">RU</button><button data-l="en">EN</button></div>
+  <a class="gh" href="https://github.com/dero4ka/d4" title="GitHub" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+</nav></div></header>
 
-<main>
-<div class="hero">
-  <div class="hero-bg scene" data-scene="auto"></div>
+<main id="top">
+<div class="hero" id="home">
+  <div class="hero-bg scene"><svg id="heroScene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice"></svg><canvas id="fx"></canvas></div>
   <div class="wrap">
-    <span class="badge">Скоро запуск · Для любого устройства</span>
-    <h1>Ваш проект,<br><span>собранный под вас</span></h1>
-    <p class="lead">D4-Site — аккуратная и быстрая основа для сайта: живые темы с пейзажами, понятная структура и минимум нагрузки на браузер.</p>
+    <div class="badge"><i></i><span data-en="Version 1.2.0 · Windows 10/11">Версия 1.2.0 · Windows 10/11</span></div>
+    <h1 data-en="Windows desktop, <span>built around you</span>">Рабочий стол Windows, <span>собранный под вас</span></h1>
+    <p class="lead" data-en="D4 replaces the taskbar with your own bar, adds a Start menu with search, 12 desktop widgets, 13 themes with live wallpapers and a glass mode.">D4 заменяет панель задач своей панелью, добавляет меню «Пуск» с поиском, 12 виджетов на рабочий стол, 13 тем с живыми обоями и режим стекла.</p>
     <div class="cta">
-      <a href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" class="btn primary">Скачать для Windows</a>
-      <a href="#themes" class="btn ghost">Попробовать темы</a>
-      <a href="#features" class="btn ghost">Узнать больше</a>
+      <a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download D4.exe">Скачать D4.exe</a>
+      <a class="btn ghost" href="#demo" data-en="Try the demo">Попробовать демо</a>
     </div>
-    <div class="mock scene" data-scene="auto" aria-hidden="true">
-      <div class="clock" id="clock">12:00</div>
-      <div class="win w1"><i></i><i></i><i></i><i></i></div>
-      <div class="win w2"><i></i><i></i><i></i></div>
-      <div class="bar"><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="splash reveal">
+      <div class="desk scene" id="heroDesk"><svg id="deskScene" viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice"></svg>
+        <div class="topbar"><span><b>D4</b><span data-en="Taskbar · Search · Widgets">Панель · Поиск · Виджеты</span></span><span id="clk">12:00</span></div>
+        <div class="win w-clock"><small data-en="Clock">Часы</small><b id="hc">12:00</b></div>
+        <div class="win w-pomo"><small>Pomodoro</small><b id="pm">25:00</b></div>
+        <div class="dock" id="heroDock"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
     </div>
   </div>
 </div>
 
-<section id="about"><div class="wrap reveal">
-  <div class="eyebrow">Что такое D4-Site</div>
-  <h2>Два принципа, на которых всё держится</h2>
-  <p class="sub">Красота и скорость не должны исключать друг друга.</p>
-  <div class="grid g2">
-    <div class="card"><div class="ico">✦</div><h3>Гибкая настройка</h3><p>Цвета, акценты, карточки и пейзажи меняются в один клик. Это не просто тёмный режим, а целый образ, который вы выбираете сами.</p></div>
-    <div class="card"><div class="ico">⚡</div><h3>Лёгкость</h3><p>Чистые HTML, CSS и несколько строк скрипта. Страница открывается мгновенно и не нагружает устройство.</p></div>
-  </div>
-  <div class="grid g2 compare" style="margin-top:20px">
-    <div class="card bad"><h3>Обычный шаблон</h3><ul><li>Одна фиксированная палитра</li><li>Тяжёлые скрипты и библиотеки</li><li>Картинки весят мегабайты</li><li>Долгая загрузка</li></ul></div>
-    <div class="card good"><h3>С D4-Site</h3><ul><li>Темы переключаются на лету</li><li>Ноль внешних зависимостей</li><li>Пейзажи рисуются векторно</li><li>Мгновенный старт</li></ul></div>
+<section style="padding-top:30px"><div class="wrap">
+  <div class="welcome reveal">
+    <div><div class="eyebrow" data-en="Free · open source">Бесплатно · открытый код</div>
+    <h2 data-en="Download, run, enjoy">Скачайте, запустите — и всё</h2>
+    <p data-en="D4 is a single exe file from GitHub Releases. It needs administrator rights (for full file search and hiding the system taskbar). You can undo everything with uninstall.bat.">D4 — один exe-файл из GitHub Releases. Нужны права администратора (для полного поиска по файлам и скрытия системной панели). Всё откатывается через uninstall.bat.</p></div>
+    <div class="cta"><a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download">Скачать</a><a class="btn ghost" href="https://github.com/dero4ka/d4" data-en="Source code">Исходный код</a></div>
   </div>
 </div></section>
 
-<section id="features"><div class="wrap reveal">
-  <div class="eyebrow">Возможности</div>
-  <h2>Больше, чем просто красивая страница</h2>
-  <p class="sub">Всё, что нужно для аккуратного современного сайта, уже внутри.</p>
+<section style="padding-top:20px"><div class="wrap"><div class="grid g3">
+  <a class="card hov reveal" href="#demo"><div class="ico">▶</div><h3 data-en="Demo">Демо</h3><p data-en="Hover over the bar, open Start, switch themes — right here in the browser.">Наведите на панель, откройте «Пуск», переключите тему — прямо в браузере.</p><span class="more" data-en="Open →">Открыть →</span></a>
+  <a class="card hov reveal" href="#articles"><div class="ico">✎</div><h3 data-en="Articles">Статьи</h3><p data-en="How D4 works inside: glass, wallpapers, search, safe uninstall.">Как D4 устроен внутри: стекло, обои, поиск, безопасное удаление.</p><span class="more" data-en="Read →">Читать →</span></a>
+  <a class="card hov reveal" href="https://github.com/dero4ka/d4"><div class="ico">★</div><h3>GitHub</h3><p data-en="Releases, issues, source code. Write a bug report with %AppData%\D4\d4.log.">Релизы, баги, исходники. Пишите об ошибках, прикладывая %AppData%\D4\d4.log.</p><span class="more" data-en="Go →">Перейти →</span></a>
+</div></div></section>
+
+<section><div class="wrap">
+  <div class="eyebrow" data-en="Principles">Принципы</div>
+  <h2 data-en="Your desktop, your rules">Ваш рабочий стол — ваши правила</h2>
+  <p class="sub" data-en="Everything is configurable, and D4 puts everything back when you quit.">Всё настраивается, а при выходе D4 возвращает систему в исходное состояние.</p>
+  <div class="grid g2 compare">
+    <div class="card bad reveal"><h3 data-en="Plain Windows">Обычный Windows</h3><ul><li data-en="Fixed taskbar look">Панель задач почти не настраивается</li><li data-en="One theme for everything">Одна тема на всё</li><li data-en="Static wallpaper">Статичные обои</li><li data-en="Search limited by indexing">Поиск зависит от индексации</li><li data-en="Widgets in a separate panel">Виджеты в отдельной шторке</li></ul></div>
+    <div class="card good reveal"><h3>D4</h3><ul><li data-en="Own bar with magnifying icons and tooltips">Своя панель с увеличением значков и подсказками</li><li data-en="13 themes, system windows follow them">13 тем, системные окна подстраиваются</li><li data-en="Animated particle wallpapers">Анимированные обои с частицами</li><li data-en="Search by files, apps, wrong keyboard layout">Поиск по файлам и программам, в том числе в неверной раскладке</li><li data-en="Widgets live right on the desktop">Виджеты прямо на рабочем столе</li></ul></div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <div class="eyebrow">Demo</div>
+  <h2 data-en="Try it right now">Попробуйте прямо сейчас</h2>
+  <p class="sub" data-en="This is a mock-up in the browser: hover the bar, press the Start icon, tick tasks, run the timer.">Это макет в браузере: наведите на панель, нажмите «Пуск», отметьте задачи, запустите таймер.</p>
+  <div class="demo-ctl" id="demoCtl"></div>
+  <div class="desk scene" id="demoDesk"><svg id="demoScene" viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice"></svg>
+    <div class="topbar"><span><span class="startbtn" id="sb"><i></i><i></i><i></i><i></i></span><b>D4</b></span><span id="clk2">12:00</span></div>
+    <div class="launch" id="launch"><input id="q" placeholder="Поиск программ и файлов…" data-enph="Search apps and files…"><ul id="res"></ul></div>
+    <div class="win w-clock"><small data-en="Clock">Часы</small><b id="hc2">12:00</b></div>
+    <div class="win w-weather"><small data-en="Weather">Погода</small><b>+18°</b><div style="font-size:12px;opacity:.8" data-en="Partly cloudy">Облачно с прояснениями</div></div>
+    <div class="win w-pomo"><small>Pomodoro</small><b id="pm2">25:00</b><button id="pStart" data-en="Start">Старт</button><button id="pReset" data-en="Reset">Сброс</button></div>
+    <div class="win w-todo"><small data-en="Checklist">Чек-лист</small><label><input type="checkbox" checked> <span data-en="Try D4">Попробовать D4</span></label><label><input type="checkbox"> <span data-en="Pick a theme">Выбрать тему</span></label><input type="text" id="tin" placeholder="Новая задача…" data-enph="New task…"></div>
+    <div class="dock" id="demoDock"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="eyebrow" data-en="Features">Возможности</div>
+  <h2 data-en="Everything you expect from a desktop shell">Всё, что нужно от оболочки рабочего стола</h2>
+  <p class="sub" data-en="Not a skin: D4 is a real bar, Start menu and task view.">Это не «скин»: у D4 своя панель, своё меню «Пуск» и свой обзор задач.</p>
   <div class="grid g3">
-    <div class="card"><div class="ico">◐</div><h3>Темы</h3><p>Пять готовых палитр, включая светлую. Новая тема — это несколько строк CSS.</p></div>
-    <div class="card"><div class="ico">▲</div><h3>Пейзажи</h3><p>Небо, горы и солнце подстраиваются под цвета выбранной темы.</p></div>
-    <div class="card"><div class="ico">▤</div><h3>Стеклянные карточки</h3><p>Полупрозрачные блоки с размытием, как в современных интерфейсах.</p></div>
-    <div class="card"><div class="ico">◎</div><h3>Анимации</h3><p>Плавное появление секций, парящие окна и живой док в макете.</p></div>
-    <div class="card"><div class="ico">⌕</div><h3>Читаемость</h3><p>Чёткая типографика и достаточный контраст в каждой теме.</p></div>
-    <div class="card"><div class="ico">☰</div><h3>Адаптивность</h3><p>Сетки перестраиваются под телефон, планшет и большой монитор.</p></div>
+    <div class="card hov reveal"><div class="ico">▭</div><h3 data-en="Bar with magnification">Панель с увеличением</h3><p data-en="Icons grow under the cursor, names show in tooltips, right-click ends a task. Explorer and Edge are pinned by default.">Значки растут под курсором, названия появляются в подсказках, правая кнопка завершает задачу. Проводник и Edge закреплены по умолчанию.</p><div class="minidock" id="miniDock"><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+    <div class="card hov reveal"><div class="ico">❖</div><h3 data-en="12 widgets">12 виджетов</h3><p data-en="Clock, system monitor, weather, notes, music player, calendar, Pomodoro, currency rates, GitHub, Discord, checklist and text snippets.">Часы, монитор ресурсов, погода, заметки, музыкальный плеер, календарь, Pomodoro, курсы валют, GitHub, Discord, чек-лист и быстрые тексты.</p></div>
+    <div class="card hov reveal"><div class="ico">⌕</div><h3 data-en="Search">Поиск</h3><p data-en="Apps and files in one box. Finds text typed in the wrong layout («руддщ» → hello).">Программы и файлы в одной строке. Находит и текст в неверной раскладке («руддщ» → hello).</p></div>
+    <div class="card hov reveal"><div class="ico">▣</div><h3 data-en="Mini-folders">Мини-папки</h3><p data-en="Small floating folders with shortcuts, right on the desktop.">Небольшие плавающие папки с ярлыками прямо на рабочем столе.</p></div>
+    <div class="card hov reveal"><div class="ico">❂</div><h3 data-en="Live wallpapers">Живые обои</h3><p data-en="Each theme has a vector scene and animated particles: snow, rain, fireflies, petals, aurora, lightning.">У каждой темы своя векторная сцена и анимированные частицы: снег, дождь, светлячки, лепестки, северное сияние, молнии.</p></div>
+    <div class="card hov reveal"><div class="ico">◇</div><h3 data-en="Glass">Стекло</h3><p data-en="Optional acrylic glass for the bar, Start menu, widgets and flyouts. Toggle in settings.">Необязательное акриловое стекло для панели, «Пуска», виджетов и всплывающих окон. Включается в настройках.</p></div>
+    <div class="card hov reveal"><div class="ico">⊞</div><h3 data-en="Task view and flyouts">Обзор задач и меню</h3><p data-en="Own task view with previews, real network and volume flyouts, a custom Start logo per theme.">Свой обзор задач с миниатюрами, настоящие меню сети и громкости, свой логотип «Пуска» у каждой темы.</p></div>
+    <div class="card hov reveal"><div class="ico">◐</div><h3 data-en="Windows theming">Тема Windows</h3><p data-en="Optionally switches Windows accent and light/dark mode with the theme and restores it on exit.">По желанию меняет акцент и светлую/тёмную тему Windows вместе с темой D4 и возвращает при выходе.</p></div>
+    <div class="card hov reveal"><div class="ico">↺</div><h3 data-en="Safe by design">Безопасно</h3><p data-en="On exit the taskbar and wallpaper are restored; a watcher process does it even after a crash.">При выходе возвращаются панель задач и обои; отдельный процесс-наблюдатель делает это даже после сбоя.</p></div>
   </div>
 </div></section>
 
-<section id="light"><div class="wrap reveal">
-  <div class="eyebrow">Оптимизация</div>
-  <h2>Красиво — и при этом легко</h2>
-  <p class="sub">Сайт должен открываться быстро везде, даже на слабом соединении.</p>
+<section><div class="wrap">
+  <div class="eyebrow" data-en="Under the hood">Под капотом</div>
+  <h2 data-en="Honest about resources">Честно о ресурсах</h2>
+  <p class="sub" data-en="We publish no made-up benchmarks. D4 is a .NET 8 / WPF app, so measure it yourself in Task Manager.">Мы не выдумываем цифры. D4 — приложение на .NET 8 / WPF, так что замерьте его сами в диспетчере задач.</p>
   <div class="stats">
-    <div class="card stat"><b>0</b><span>внешних библиотек и фреймворков</span></div>
-    <div class="card stat"><b>1</b><span>файл на всю страницу</span></div>
-    <div class="card stat"><b>&lt;20 КБ</b><span>общий размер страницы</span></div>
+    <div class="card stat reveal"><b>13</b><span data-en="built-in themes">встроенных тем</span></div>
+    <div class="card stat reveal"><b>12</b><span data-en="desktop widgets">виджетов</span></div>
+    <div class="card stat reveal"><b>30</b><span data-en="fps cap for particles">fps — предел частиц</span></div>
   </div>
-  <div class="card"><h3>Меньше слоёв — больше скорости</h3><p>Вместо тяжёлых фотографий пейзажи собраны из градиентов и векторных гор. Анимации используют только transform и opacity, а скрипт занимает несколько строк, поэтому страница плавная даже на старых устройствах.</p></div>
+  <div class="card reveal"><h3 data-en="Power saving">Экономия ресурсов</h3><ul><li data-en="Particles pause under a maximized window">Частицы останавливаются под развёрнутым окном</li><li data-en="The bar hides in fullscreen apps">Панель прячется в полноэкранных приложениях</li><li data-en="Glass is baked once, not redrawn each frame">Стекло запекается один раз, а не перерисовывается каждый кадр</li><li data-en="Widgets you don't enable are never created">Выключенные виджеты не создаются вообще</li></ul></div>
 </div></section>
 
-<section id="themes"><div class="wrap reveal">
-  <div class="eyebrow">Темы</div>
-  <h2>Выберите настроение</h2>
-  <p class="sub">Нажмите на любую картинку, и вся страница перекрасится вместе с пейзажем.</p>
-  <div class="gallery" id="gallery">
-    <button class="shot on" data-t="default" data-theme="default"><div class="scene" data-scene="ocean"></div><em>Океан <small>синий · сиреневый</small></em></button>
-    <button class="shot" data-t="sunset" data-theme="sunset"><div class="scene" data-scene="sunset"></div><em>Закат <small>оранжевый · розовый</small></em></button>
-    <button class="shot" data-t="forest" data-theme="forest"><div class="scene" data-scene="forest"></div><em>Лес <small>зелёный · лайм</small></em></button>
-    <button class="shot" data-t="violet" data-theme="violet"><div class="scene" data-scene="neon"></div><em>Неон <small>фиолетовый · розовый</small></em></button>
-    <button class="shot" data-t="light" data-theme="light"><div class="scene" data-scene="light"></div><em>Светлая <small>небесный · белый</small></em></button>
+<section id="themes"><div class="wrap">
+  <div class="eyebrow" data-en="Themes">Темы</div>
+  <h2 data-en="13 built-in themes">13 встроенных тем</h2>
+  <p class="sub" data-en="Click a card — the whole page changes. In D4 the same applies to the bar, Start, wallpaper and system windows.">Нажмите на карточку — изменится вся страница. В D4 так же меняются панель, «Пуск», обои и системные окна.</p>
+  <div class="gallery" id="gallery"></div>
+  <p class="caption" id="cap"></p>
+  <div class="grid g2 tcycle">
+    <div class="card hov reveal"><h3 data-en="Custom themes">Свои темы</h3><p data-en="Pick your own accent colors in settings.">Выбирайте свои акцентные цвета в настройках.</p></div>
+    <div class="card hov reveal"><h3 data-en="Auto-changing themes">Автосмена тем</h3><p data-en="Coming soon: change by time of day or weather.">Скоро: смена по времени суток или погоде.</p><pre>theme: sunset @ 19:00
+theme: ocean  @ 07:00</pre></div>
   </div>
-  <p class="note">Хотите настоящие фото? Положите снимок в папку <code>assets/</code> и добавьте в CSS для <code>.scene</code> строку <code>background-image:url(assets/photo.jpg);background-size:cover</code> — горы можно убрать, удалив <code>svg</code> внутри.</p>
 </div></section>
 
-<section id="contact" class="final"><div class="wrap reveal">
-  <div class="box">
-    <div class="scene" data-scene="auto"></div>
-    <h2>Готовы начать?</h2>
-    <p>Напишите нам, и мы поможем собрать D4-Site под вашу задачу.</p>
-    <a href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" class="btn primary">Скачать для Windows</a>
-    <a href="mailto:hello@example.com" class="btn ghost">Написать на почту</a>
+<section id="articles"><div class="wrap">
+  <div class="eyebrow" data-en="Articles">Статьи</div>
+  <h2 data-en="How it works">Как это работает</h2>
+  <div class="grid" style="margin-top:30px">
+    <details class="card reveal"><summary data-en="How does the glass work?">Как работает стекло?</summary><div class="body"><p data-en="Windows without transparency (bar, settings) use the system acrylic effect. Transparent layered windows (widgets, flyouts) can't, so D4 captures the screen behind them, blurs it once and uses it as a brush.">Окна без прозрачности (панель, настройки) используют системный акрил. Прозрачные окна (виджеты, всплывающие меню) так не умеют, поэтому D4 снимает экран под ними, один раз размывает и использует как кисть.</p></div></details>
+    <details class="card reveal"><summary data-en="Why administrator rights?">Зачем права администратора?</summary><div class="body"><p data-en="To search system folders that a normal user cannot read, and to control the system taskbar reliably. Autostart uses a scheduled task so you don't see a UAC prompt on every login.">Чтобы искать по системным папкам, недоступным обычному пользователю, и надёжно управлять системной панелью. Автозапуск идёт через планировщик, поэтому окно UAC не мешает при каждом входе.</p></div></details>
+    <details class="card reveal"><summary data-en="How do I remove D4?">Как удалить D4?</summary><div class="body"><p data-en="Run uninstall.bat. It stops D4, restores the taskbar and wallpaper and removes autostart.">Запустите uninstall.bat. Он остановит D4, вернёт панель задач и обои и уберёт автозапуск.</p></div></details>
   </div>
 </div></section>
+
+<section class="final"><div class="wrap"><div class="box">
+  <div class="scene" id="finalScene"><svg id="finSvg" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid slice"></svg></div>
+  <h2 data-en="Make your desktop yours">Сделайте рабочий стол своим</h2>
+  <p data-en="Free, open source, one file.">Бесплатно, с открытым кодом, один файл.</p>
+  <a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download D4.exe">Скачать D4.exe</a>
+</div></div></section>
 </main>
-
-<footer><div class="wrap">
-  <span><b>D4</b>-Site</span>
-  <span>© 2026 D4-Site. Все права защищены.</span>
-</div></footer>
-
+<footer><div class="wrap"><span>© D4 · v1.2.0</span><span data-en="Made with .NET 8 and WPF · Contact: hello@example.com">Сделано на .NET 8 и WPF · Связь: hello@example.com</span></div></footer>
 <script>
 (function(){
-  var root=document.documentElement;
-  // landscapes drawn from theme colors: each theme has its own composition
-  var P=function(c,d,o){return '<path class="'+c+'" d="'+d+'"'+(o?' opacity="'+o+'"':'')+'/>'};
-  var C=function(c,x,y,r,o){return '<circle class="'+c+'" cx="'+x+'" cy="'+y+'" r="'+r+'"'+(o?' opacity="'+o+'"':'')+'/>'};
-  var R=function(c,x,y,w,h,o){return '<rect class="'+c+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"'+(o?' opacity="'+o+'"':'')+'/>'};
-  var E=function(c,x,y,rx,ry,o){return '<ellipse class="'+c+'" cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'"'+(o?' opacity="'+o+'"':'')+'/>'};
-  var stars=function(){return [[60,40],[140,90],[230,30],[330,70],[420,25],[520,85],[610,40],[700,75],[760,20],[90,150],[300,120],[500,130],[660,140],[370,50],[450,100]].map(function(p){return C('star',p[0],p[1],1.6)}).join('')};
-  var pines=function(base,h,w,n,cls,off){var s='';for(var i=0;i<n;i++){var x=(i+.5)*800/n+(i%2?off:-off);
-    s+=P(cls,'M'+(x-w/2)+' '+base+'L'+x+' '+(base-h*.62)+'L'+(x+w/2)+' '+base+'Z M'+(x-w*.36)+' '+(base-h*.38)+'L'+x+' '+(base-h)+'L'+(x+w*.36)+' '+(base-h*.38)+'Z')}return s};
-  var cloud=function(x,y,s){return E('cl',x,y,40*s,14*s)+E('cl',x+26*s,y-10*s,30*s,16*s)+E('cl',x-26*s,y-4*s,28*s,12*s)};
-  var scenes={
-    ocean:function(){
-      var refl=[[96,312],[70,324],[104,336],[60,349],[84,363],[46,378]].map(function(r){return R('sunf',400-r[0]/2,r[1],r[0],3,.55)}).join('');
-      return stars()+C('glow',400,150,95)+C('sun',400,150,42)
-        +P('m1','M0 300 L120 238 L220 290 L330 228 L450 295 L560 250 L680 300 L800 255 V330 H0Z')
-        +R('m2',0,300,800,150)+refl
-        +P('m3','M0 450 L0 395 Q90 365 170 410 L260 450Z')+P('m3','M800 450 L800 385 Q700 355 620 415 L560 450Z')},
-    sunset:function(){
-      var refl=[[200,312],[150,328],[110,345],[70,363],[40,382]].map(function(r){return R('sunf',400-r[0]/2,r[1],r[0],4,.6)}).join('');
-      return C('glow',400,300,150)+C('sun',400,300,96)
-        +E('cl',250,170,100,7,.4)+E('cl',540,215,120,8,.35)+E('cl',390,135,70,6,.4)+E('cl',160,235,80,5,.3)
-        +P('m1','M0 305 L0 245 L80 268 L165 228 L270 305Z')+P('m2','M800 305 L800 238 L710 262 L625 222 L520 305Z')
-        +R('m3',0,300,800,150)+refl
-        +P('m2','M0 450 L0 410 Q120 385 230 450Z')+P('m2','M800 450 L800 400 Q680 372 560 450Z')},
-    forest:function(){
-      return C('glow',400,110,150)+C('sun',400,110,34,.7)
-        +P('sun','M375 0 L425 0 L590 450 L300 450Z','.12')+P('sun','M330 0 L360 0 L260 450 L140 450Z','.08')
-        +P('m1','M0 320 Q150 250 300 300 T560 290 T800 310 V450 H0Z')
-        +pines(340,100,46,15,'m1',9)+E('sun',400,330,420,26,.12)
-        +pines(395,130,60,11,'m2',12)+E('sun',300,385,380,20,.1)
-        +pines(460,175,80,8,'m3',16)},
-    neon:function(){
-      var b=[[40,60,90],[110,50,130],[170,70,100],[250,60,170],[320,70,120],[395,60,210],[465,70,140],[540,60,180],[610,70,110],[685,60,150],[745,70,95]];
-      var back=b.map(function(q){return R('m2',q[0],330-q[2],q[1],q[2])}).join('');
-      var wins='';b.forEach(function(q,i){for(var k=0;k<4;k++){if((i+k)%2===0)wins+=R('sunf',q[0]+8+(k%2)*(q[1]/2-4),330-q[2]+14+Math.floor(k/2)*(q[2]/3),6,8,.75)}});
-      var grid='';[345,362,385,415].forEach(function(y){grid+='<line class="ln" x1="0" x2="800" y1="'+y+'" y2="'+y+'"/>'});
-      for(var i=-7;i<=7;i++)grid+='<line class="ln" x1="400" y1="330" x2="'+(400+i*150)+'" y2="450"/>';
-      var bars=[[262,3],[286,5],[310,7]].map(function(r){return '<rect x="280" y="'+r[0]+'" width="240" height="'+r[1]+'" fill="#000"/>'}).join('');
-      return stars()+'<defs><mask id="nmask"><rect width="800" height="450" fill="#fff"/>'+bars+'</mask></defs>'
-        +C('glow',400,235,130)+'<circle class="sunf" cx="400" cy="235" r="92" mask="url(#nmask)"/>'
-        +back+R('m3',0,330,800,120)+wins+grid},
-    light:function(){
-      return C('glow',620,105,80)+C('sun',620,105,38)
-        +cloud(330,105,1.2)+cloud(470,210,1)+cloud(190,175,.9)+cloud(680,230,.8)
-        +'<path class="bird" d="M390 150 q8 -8 16 0 q8 -8 16 0"/><path class="bird" d="M430 175 q6 -6 12 0 q6 -6 12 0"/>'
-        +P('m1','M0 330 Q200 268 400 322 T800 298 V450 H0Z')+P('m2','M0 385 Q250 332 450 378 T800 350 V450 H0Z')+P('m3','M0 435 Q300 388 520 428 T800 405 V450 H0Z')}
-  };
-  var themeScene={'default':'ocean',sunset:'sunset',forest:'forest',violet:'neon',light:'light'};
-  function draw(el,type){el.innerHTML='<svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMax slice" aria-hidden="true">'+scenes[type]()+'</svg>'+(el.dataset.keep||'')}
-  function renderAuto(t){document.querySelectorAll('[data-scene="auto"]').forEach(function(el){
-    var kids=[].slice.call(el.children).filter(function(c){return c.tagName!=='svg'});
-    draw(el,themeScene[t]||'ocean');kids.forEach(function(k){el.appendChild(k)})})}
-  document.querySelectorAll('[data-scene]').forEach(function(el){
-    if(el.dataset.scene!=='auto'){draw(el,el.dataset.scene)}
-    else{var kids=[].slice.call(el.children);el.insertAdjacentHTML('afterbegin','');draw(el,'ocean');kids.forEach(function(k){el.appendChild(k)})}});
-
-  // themes
-  var shots=document.querySelectorAll('.shot');
-  function setTheme(t){
-    if(t==='default'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',t)}
-    var light=t==='light';
-    document.querySelector('meta[name=color-scheme]').content=light?'light':'dark';
-    shots.forEach(function(s){s.classList.toggle('on',s.dataset.t===t)});
-    renderAuto(t);
-    try{localStorage.setItem('d4-theme',t)}catch(e){}
-  }
-  shots.forEach(function(s){s.addEventListener('click',function(){setTheme(s.dataset.t)})});
-  try{var saved=localStorage.getItem('d4-theme');if(saved)setTheme(saved)}catch(e){}
-
-  // clock
-  var clock=document.getElementById('clock');
-  function tick(){var d=new Date();clock.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
-  tick();setInterval(tick,30000);
-
-  // reveal on scroll
-  var els=document.querySelectorAll('.reveal');
-  if('IntersectionObserver' in window){
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
-    els.forEach(function(e){io.observe(e)});
-  }else{els.forEach(function(e){e.classList.add('in')})}
+const THEMES=[
+["ocean","Океан","Ocean","rise","Пузырьки поднимаются со дна","Bubbles rising"],
+["sunset","Закат","Sunset","drift","Тёплые искры у горизонта","Warm embers"],
+["forest","Лес","Forest","firefly","Светлячки между деревьями","Fireflies"],
+["neon","Неон","Neon","twinkle","Мерцающие неоновые звёзды","Neon twinkle"],
+["scarlet","Алый","Scarlet","spark","Искры костра","Sparks"],
+["crimson","Багровый","Crimson","rise","Тёмный жар","Dark embers"],
+["ruby","Рубин","Ruby","twinkle","Блики граней","Gem glints"],
+["aurora","Аврора","Aurora","aurora","Северное сияние","Northern lights"],
+["sakura","Сакура","Sakura","petal","Лепестки сакуры","Falling petals"],
+["cosmos","Космос","Cosmos","shoot","Падающие звёзды","Shooting stars"],
+["winter","Зима","Winter","snow","Снегопад","Snowfall"],
+["storm","Гроза","Storm","rain","Дождь и молнии","Rain and lightning"],
+["light","Светлая","Light","drift","Светлые пылинки","Light dust"]];
+let lang="ru",theme="ocean";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function rnd(i){const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+function scene(svg,id){
+  let h='';
+  for(let i=0;i<46;i++)h+=`<circle class="star" cx="${rnd(i)*1200}" cy="${rnd(i+99)*320}" r="${.6+rnd(i+7)*1.6}"/>`;
+  h+=`<circle class="glow" cx="860" cy="250" r="120"/><circle class="sun" cx="860" cy="250" r="54"/>`;
+  if(id=="aurora")h+=`<path class="rib acc" opacity=".35" d="M0 200 C300 80 500 300 800 160 S1100 120 1200 200 V0 H0Z"/><path class="rib acc2" opacity=".3" d="M0 240 C300 140 600 330 900 200 S1150 180 1200 240 V0 H0Z"/>`;
+  h+=`<path class="m1" d="M0 470 L130 330 L250 430 L400 270 L560 440 L700 340 L860 450 L1010 320 L1200 450 V700 H0Z"/>`;
+  h+=`<path class="m2" d="M0 540 L170 420 L320 520 L500 390 L680 530 L840 430 L1020 540 L1200 440 V700 H0Z"/>`;
+  h+=`<path class="m3" d="M0 620 L200 530 L380 610 L600 510 L800 620 L1000 540 L1200 620 V700 H0Z"/>`;
+  svg.innerHTML=h;
+}
+function applyLang(){
+  $$("[data-en]").forEach(e=>{if(e.dataset.ru==null)e.dataset.ru=e.innerHTML;e.innerHTML=lang=="en"?e.dataset.en:e.dataset.ru});
+  $$("[data-enph]").forEach(e=>{if(e.dataset.ruph==null)e.dataset.ruph=e.placeholder;e.placeholder=lang=="en"?e.dataset.enph:e.dataset.ruph});
+  document.documentElement.lang=lang;
+  $$(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.l==lang));
+  buildGallery();buildCtl();
+}
+$$(".lang button").forEach(b=>b.onclick=()=>{lang=b.dataset.l;applyLang()});
+["heroScene","deskScene","demoScene","finSvg"].forEach(i=>scene($("#"+i),theme));
+function setTheme(id){
+  theme=id;document.body.dataset.theme=id;
+  const dark=!["light","sakura"].includes(id);
+  document.querySelector('meta[name=color-scheme]').content=dark?"dark":"light";
+  ["heroScene","deskScene","demoScene","finSvg"].forEach(i=>scene($("#"+i),id));
+  $$(".shot").forEach(s=>s.classList.toggle("on",s.dataset.id==id));
+  const t=THEMES.find(x=>x[0]==id);$("#cap").textContent=(lang=="en"?t[2]+" — "+t[5]:t[1]+" — "+t[4]);
+  $$(".chip[data-t]").forEach(c=>c.classList.toggle("on",c.dataset.t==id));
+  mode=t[3];parts=[];
+}
+function buildGallery(){
+  const g=$("#gallery");g.innerHTML="";
+  THEMES.forEach(t=>{
+    const b=document.createElement("button");b.className="shot";b.dataset.id=t[0];
+    b.innerHTML=`<div class="scene" data-theme="${t[0]}"><svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice"></svg></div><em>${lang=="en"?t[2]:t[1]}<small>${lang=="en"?t[5]:t[4]}</small></em>`;
+    scene(b.querySelector("svg"),t[0]);b.onclick=()=>setTheme(t[0]);g.appendChild(b);
+  });
+  setTheme(theme);
+}
+let glass=false;
+function buildCtl(){
+  const c=$("#demoCtl");c.innerHTML="";
+  THEMES.forEach(t=>{const b=document.createElement("button");b.className="chip";b.dataset.t=t[0];b.textContent=lang=="en"?t[2]:t[1];b.onclick=()=>setTheme(t[0]);c.appendChild(b)});
+  const s=document.createElement("span");s.className="sep";c.appendChild(s);
+  const gb=document.createElement("button");gb.className="chip"+(glass?" on":"");gb.textContent=lang=="en"?"Glass":"Стекло";
+  gb.onclick=()=>{glass=!glass;$("#demoDesk").classList.toggle("glass",glass);gb.classList.toggle("on",glass)};c.appendChild(gb);
+  setTheme(theme);
+}
+// clock
+function tick(){const d=new Date(),s=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");["clk","clk2","hc","hc2"].forEach(i=>$("#"+i).textContent=s)}
+tick();setInterval(tick,5000);
+// pomodoro
+let left=1500,run=null;
+function pf(){const t=String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");$("#pm").textContent=t;$("#pm2").textContent=t}
+$("#pStart").onclick=()=>{if(run){clearInterval(run);run=null}else run=setInterval(()=>{if(left>0)left--;pf()},1000)};
+$("#pReset").onclick=()=>{left=1500;pf()};
+// todo
+$("#tin").addEventListener("keydown",e=>{if(e.key=="Enter"&&e.target.value.trim()){const l=document.createElement("label");l.innerHTML='<input type="checkbox"> <span></span>';l.lastChild.textContent=e.target.value.trim();e.target.before(l);e.target.value=""}});
+// start menu
+const APPS=["Проводник / Explorer","Microsoft Edge","Блокнот / Notepad","Калькулятор / Calculator","Параметры / Settings","Терминал / Terminal","Paint","Диспетчер задач / Task Manager"];
+const L1="йцукенгшщзхъфывапролджэячсмитьбю",L2="qwertyuiop[]asdfghjkl;'zxcvbnm,.";
+const fix=s=>[...s.toLowerCase()].map(c=>{const i=L1.indexOf(c);return i>=0?L2[i]:c}).join("");
+function search(){const v=$("#q").value.toLowerCase(),f=fix($("#q").value);
+  $("#res").innerHTML="";APPS.filter(a=>!v||a.toLowerCase().includes(v)||a.toLowerCase().includes(f)).forEach(a=>{const li=document.createElement("li");li.textContent=a;$("#res").appendChild(li)})}
+$("#sb").onclick=e=>{e.stopPropagation();$("#launch").classList.toggle("open");search();if($("#launch").classList.contains("open"))$("#q").focus()};
+$("#q").oninput=search;
+$("#launch").onclick=e=>e.stopPropagation();
+document.addEventListener("click",()=>$("#launch").classList.remove("open"));
+// magnify
+function mag(box,max){const it=[...box.children];
+  box.addEventListener("mousemove",e=>it.forEach(s=>{const r=s.getBoundingClientRect(),d=Math.abs(e.clientX-(r.left+r.width/2)),k=Math.max(0,1-d/110);s.style.transform=`scale(${1+k*max})`}));
+  box.addEventListener("mouseleave",()=>it.forEach(s=>s.style.transform=""))}
+["heroDock","demoDock","miniDock"].forEach(i=>mag($("#"+i),.7));
+// particles
+const cv=$("#fx"),cx=cv.getContext("2d");let mode="rise",parts=[],W=0,H=0,vis=true;
+function size(){const r=cv.getBoundingClientRect();W=cv.width=r.width;H=cv.height=r.height}size();addEventListener("resize",size);
+new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
+const acc=()=>getComputedStyle(document.body).getPropertyValue("--accent").trim()||"#fff";
+function spawn(){
+  const m=mode,p={x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*2.5,a:Math.random(),t:Math.random()*6,vx:0,vy:0};
+  if(m=="rise"||m=="spark"){p.y=H+5;p.vy=-(.4+Math.random()*(m=="spark"?1.6:.9))}
+  else if(m=="snow"){p.y=-5;p.vy=.5+Math.random()*.9;p.r=1.5+Math.random()*2.5}
+  else if(m=="rain"){p.y=-10;p.vy=9+Math.random()*5;p.vx=-1.5}
+  else if(m=="petal"){p.y=-10;p.vy=.7+Math.random();p.vx=.4+Math.random();p.r=3+Math.random()*3}
+  else if(m=="shoot"){p.x=Math.random()*W;p.y=-5;p.vx=-5-Math.random()*4;p.vy=3+Math.random()*3;p.life=60;p.r=1.5}
+  else if(m=="drift"){p.vx=(Math.random()-.5)*.3;p.vy=-.15-Math.random()*.2}
+  else if(m=="firefly"){p.vx=(Math.random()-.5)*.4;p.vy=(Math.random()-.5)*.4}
+  parts.push(p)}
+let last=0,flash=0;
+function frame(ts){requestAnimationFrame(frame);if(!vis||ts-last<33)return;last=ts;
+  cx.clearRect(0,0,W,H);const want=mode=="rain"?90:mode=="shoot"?3:mode=="aurora"?0:50;
+  while(parts.length<want&&(mode!="shoot"||Math.random()<.02))spawn();
+  const col=acc();cx.fillStyle=col;cx.strokeStyle=col;
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=.05;p.x+=p.vx+(mode=="snow"||mode=="petal"?Math.sin(p.t)*.6:0);p.y+=p.vy;
+    if(mode=="twinkle"||mode=="firefly"||mode=="drift"){cx.globalAlpha=.3+.7*Math.abs(Math.sin(p.t))}else cx.globalAlpha=.8;
+    if(mode=="rain"){cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(p.x+p.vx*1.5,p.y-12);cx.stroke()}
+    else if(mode=="shoot"){cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(p.x-p.vx*5,p.y-p.vy*5);cx.stroke();p.life--}
+    else if(mode=="petal"){cx.beginPath();cx.ellipse(p.x,p.y,p.r,p.r*.6,p.t,0,6.3);cx.fill()}
+    else{cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.3);cx.fill()}
+    if(p.y<-20||p.y>H+20||p.x<-20||p.x>W+20||p.life<0||p.type)parts.splice(i,1)}
+  if(theme=="storm"){if(flash<=0&&Math.random()<.008)flash=6;if(flash>0){cx.globalAlpha=flash/12;cx.fillStyle="#cfe3ff";cx.fillRect(0,0,W,H);flash--}}
+  cx.globalAlpha=1}
+if(!matchMedia("(prefers-reduced-motion:reduce)").matches)requestAnimationFrame(frame);
+// reveal
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.12});
+$$(".reveal").forEach(e=>io.observe(e));
+applyLang();
 })();
 </script>
 </body>

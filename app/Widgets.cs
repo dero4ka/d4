@@ -19,6 +19,9 @@ public abstract class WidgetWindow : Window
 {
     protected readonly Settings S;
     protected readonly Border Card = new();
+
+    /// <summary>Вызывается после изменения настроек (город, репозиторий и т.п.).</summary>
+    public virtual void OnSettingsChanged() { }
     readonly string key;
     IntPtr hwnd;
     static int spawned;
@@ -31,8 +34,7 @@ public abstract class WidgetWindow : Window
 
         Title = title;
         WindowStyle = WindowStyle.None;
-        AllowsTransparency = true;
-        Background = Brushes.Transparent;
+        AllowsTransparency = false; // живое стекло (акрил) работает только в обычных окнах
         ShowInTaskbar = false;
         ShowActivated = false;
         ResizeMode = ResizeMode.NoResize;
@@ -44,35 +46,28 @@ public abstract class WidgetWindow : Window
         Left = pos[0];
         Top = pos[1];
 
-        Card.CornerRadius = new CornerRadius(22);
-        Card.Margin = new Thickness(8);
+        Card.CornerRadius = new CornerRadius(0); // скругление делает Windows 11 (DWM)
         Card.BorderThickness = new Thickness(1);
-        Card.Effect = new DropShadowEffect { BlurRadius = 18, Opacity = .4, ShadowDepth = 2 };
         Card.Dyn(Border.BackgroundProperty, "CardBrush");
         Card.Dyn(Border.BorderBrushProperty, "CardBorderBrush");
         Content = Card;
 
+        GlassFx.Attach(this, true);
+        ApplyLook();
+        ThemeManager.Changed += ApplyLook;
         PlayIntro();
 
         MouseLeftButtonDown += OnDrag;
         LocationChanged += (_, _) =>
         {
-            QueueGlass(450); // стекло переснимается, когда окно остановилось
             S.Positions[key] = new[] { Left, Top };
             S.SaveSoon();
         };
         Loaded += (_, _) =>
         {
             SendBack();
-            QueueGlass(600);
         };
-        ThemeManager.Changed += OnThemeForGlass;
-        Closed += (_, _) =>
-        {
-            ThemeManager.Changed -= OnThemeForGlass;
-            glassTimer?.Stop();
-        };
-        SizeChanged += (_, _) => QueueGlass(500);
+        Closed += (_, _) => ThemeManager.Changed -= ApplyLook;
         Deactivated += (_, _) => SendBack();
     }
 
@@ -100,55 +95,12 @@ public abstract class WidgetWindow : Window
 
     // ---------- стекло ----------
 
-    DispatcherTimer? glassTimer;
-    bool glassBusy;
-
-    void OnThemeForGlass() => QueueGlass(1500); // даём обоям смениться и доиграть плавный переход
-
-    void QueueGlass(int delayMs)
+    /// <summary>Со стеклом фон окна прозрачен и размытие рисует система вживую; без стекла окно закрашено цветом темы.</summary>
+    void ApplyLook()
     {
-        if (!IsLoaded) return;
-        glassTimer ??= new DispatcherTimer();
-        glassTimer.Stop();
-        glassTimer.Interval = TimeSpan.FromMilliseconds(delayMs);
-        glassTimer.Tick -= GlassTick;
-        glassTimer.Tick += GlassTick;
-        glassTimer.Start();
-    }
-
-    void GlassTick(object? sender, EventArgs e)
-    {
-        glassTimer?.Stop();
-        if (!ThemeManager.Glass)
-        {
-            Card.Dyn(Border.BackgroundProperty, "CardBrush");
-            return;
-        }
-        if (glassBusy || !IsVisible) return;
-
-        glassBusy = true;
-        var card = Card;
-        var box = card;
-        // на секунду прячем окно, чтобы в снимок попало только то, что под ним
-        Hide();
-        var wait = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
-        wait.Tick += (_, _) =>
-        {
-            wait.Stop();
-            try
-            {
-                var brush = GlassBackdrop.Bake(box);
-                if (brush != null) card.Background = brush;
-                else card.Dyn(Border.BackgroundProperty, "CardBrush");
-            }
-            finally
-            {
-                Show();
-                SendBack();
-                glassBusy = false;
-            }
-        };
-        wait.Start();
+        if (ThemeManager.Glass) Background = Brushes.Transparent;
+        else this.Dyn(BackgroundProperty, "BgBrush");
+        Card.Dyn(Border.BackgroundProperty, "CardBrush");
     }
 
     void SendBack()

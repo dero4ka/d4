@@ -13,6 +13,7 @@ public sealed class Shell
 
     BarWindow? bar;
     WinKeyHook? keyHook;
+    readonly Dictionary<string, WidgetWindow> extras = new();
     readonly WallpaperService wallpaper;
     ClockWidget? clock;
     MonitorWidget? monitor;
@@ -77,12 +78,44 @@ public sealed class Shell
         Toggle(ref monitor, s.MonitorWidget, () => new MonitorWidget(s));
         Toggle(ref notes, s.NotesWidget, () => new NotesWidget(s));
 
+        SyncExtras();
         SyncFolders();
 
         Toggle(ref bar, s.BarEnabled, () => new BarWindow(s, OpenSettings, ToggleTaskbar, Exit, SetTheme));
         bar?.ApplySettings();
 
         Native.SetTaskbarVisible(!(s.BarEnabled && s.HideTaskbar));
+    }
+
+    /// <summary>Включает и выключает дополнительные виджеты (погода, музыка, календарь и др.).</summary>
+    void SyncExtras()
+    {
+        foreach (var info in WidgetCatalog.All)
+        {
+            bool on = s.ExtraWidgets.Contains(info.Id);
+            if (on && !extras.ContainsKey(info.Id))
+            {
+                try
+                {
+                    var w = info.Make(s);
+                    extras[info.Id] = w;
+                    w.Show();
+                }
+                catch (Exception ex)
+                {
+                    Settings.Log("widget " + info.Id + ": " + ex);
+                }
+            }
+            else if (!on && extras.TryGetValue(info.Id, out var old))
+            {
+                old.Close();
+                extras.Remove(info.Id);
+            }
+            else if (on && extras.TryGetValue(info.Id, out var cur))
+            {
+                cur.OnSettingsChanged();
+            }
+        }
     }
 
     void SyncFolders()
@@ -195,6 +228,7 @@ public sealed class Shell
         monitor?.Close();
         notes?.Close();
         foreach (var w in folderWindows.Values.ToList()) w.Close();
+        foreach (var w in extras.Values.ToList()) w.Close();
         settingsWindow?.Close();
         wallpaper.Shutdown();
 

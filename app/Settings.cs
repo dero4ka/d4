@@ -16,8 +16,25 @@ public sealed class MiniFolder
     public List<string> Items { get; set; } = new();
 }
 
+public sealed class TodoItem
+{
+    public string Text { get; set; } = "";
+    public bool Done { get; set; }
+}
+
 public sealed class Settings
 {
+    // Дополнительные виджеты (id из WidgetCatalog) и их настройки
+    public List<string> ExtraWidgets { get; set; } = new();
+    public string City { get; set; } = "Москва";
+    public string Currencies { get; set; } = "USD,EUR,CNY";
+    public string GithubRepo { get; set; } = "";
+    public string DiscordGuild { get; set; } = "";
+    public int PomodoroWork { get; set; } = 25;
+    public int PomodoroBreak { get; set; } = 5;
+    public List<TodoItem> Todo { get; set; } = new();
+    public List<string> Snippets { get; set; } = new() { "Привет! Отвечу чуть позже.", "Спасибо за сообщение!" };
+
     public string Theme { get; set; } = "ocean";
 
     /// <summary>Режим стекла (прозрачные размытые панели).</summary>
@@ -52,6 +69,7 @@ public sealed class Settings
     public bool WallpaperEnabled { get; set; } = true;
     /// <summary>Частицы поверх обоев (пузыри, угольки, светлячки и т.д.).</summary>
     public bool AnimatedWallpaper { get; set; } = true;
+    public int AnimFps { get; set; } = 24;
     /// <summary>Путь к картинке или видео. Пусто — сцена из текущей темы.</summary>
     public string? WallpaperPath { get; set; }
 

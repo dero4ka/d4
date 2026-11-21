@@ -98,6 +98,8 @@ internal sealed class ParticleCanvas : FrameworkElement
     double last;
     bool running;
     public bool Paused { get; set; }
+    /// <summary>Частота кадров анимации обоев (задаётся в настройках).</summary>
+    public static int Fps { get; set; } = 24;
 
     public ParticleCanvas()
     {
@@ -195,8 +197,8 @@ internal sealed class ParticleCanvas : FrameworkElement
         {
             int count = l.Mode switch
             {
-                "twinkle" => 34, "spark" => 26, "firefly" => 34, "rise" => 48, "fall" => 56, "petal" => 34, "snow" => 110,
-                "rain" => 150, "shoot" => 2, "aurora" => 0, "lightning" => 1, _ => 42,
+                "twinkle" => 18, "spark" => 14, "firefly" => 18, "rise" => 26, "fall" => 30, "petal" => 18, "snow" => 60,
+                "rain" => 80, "shoot" => 2, "aurora" => 0, "lightning" => 1, _ => 24,
             };
             for (int i = 0; i < count; i++) l.Items.Add(Spawn(l, w, h, true));
         }
@@ -237,9 +239,9 @@ internal sealed class ParticleCanvas : FrameworkElement
         if (Paused) return;
         double now = clock.Elapsed.TotalSeconds;
         double dt = now - last;
-        if (dt < 1.0 / 30) return; // 30 кадров в секунду — хватает и почти не грузит процессор
+        if (dt < 1.0 / Math.Clamp(Fps, 5, 120)) return;
         last = now;
-        dt = Math.Min(dt, .1);
+        dt = Math.Min(dt, .15);
 
         double w = ActualWidth, h = ActualHeight;
         if (w < 10 || h < 10) return;

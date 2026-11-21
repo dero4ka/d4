@@ -50,6 +50,7 @@ public sealed class WallpaperService
             {
                 CloseVideo();
                 ApplyStatic(exists && Array.IndexOf(ImageExt, ext) >= 0 ? path : null);
+                ParticleCanvas.Fps = s.AnimFps;
                 if (s.AnimatedWallpaper) EnsureParticles();
                 else CloseParticles();
             }

@@ -164,8 +164,8 @@ public static class ThemeManager
             var acc2 = C(t.Accent2);
             var tintA = Lerp(bg, acc, 0.28);
             var tintB = Lerp(bg2, acc2, 0.30);
-            SetGrad("BgBrush", Alpha(tintA, (byte)(t.Dark ? 0x72 : 0x96)), Alpha(tintB, (byte)(t.Dark ? 0x52 : 0x78)), animate);
-            SetGrad("CardBrush", Alpha(Lerp(acc, Colors.White, t.Dark ? .15 : .55), (byte)(t.Dark ? 0x44 : 0x8C)), Alpha(acc2, (byte)(t.Dark ? 0x1C : 0x44)), animate);
+            SetGrad("BgBrush", Alpha(tintA, (byte)(t.Dark ? 0x4A : 0x78)), Alpha(tintB, (byte)(t.Dark ? 0x30 : 0x58)), animate);
+            SetGrad("CardBrush", Alpha(Lerp(acc, Colors.White, t.Dark ? .15 : .55), (byte)(t.Dark ? 0x30 : 0x6A)), Alpha(acc2, (byte)(t.Dark ? 0x12 : 0x30)), animate);
             SetGrad("CardBorderBrush", Alpha(Lerp(acc, Colors.White, .62), 0xE0), Alpha(acc2, (byte)(t.Dark ? 0x40 : 0x70)), animate);
         }
         else

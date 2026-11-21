@@ -33,9 +33,9 @@ internal static class GlassFx
     {
         var policy = new ACCENT_POLICY
         {
-            AccentState = on ? 4 : 0, // ACCENT_ENABLE_ACRYLICBLURBEHIND / отключено
+            AccentState = on ? 3 : 0, // ACCENT_ENABLE_BLURBEHIND: мягче и заметно легче акрила
             AccentFlags = 0,
-            GradientColor = on ? 0x20000000u : 0u,
+            GradientColor = 0u,
         };
         int size = Marshal.SizeOf(policy);
         IntPtr ptr = Marshal.AllocHGlobal(size);
@@ -65,7 +65,7 @@ internal static class GlassFx
                 SetBlur(h, ThemeManager.Glass);
                 if (roundCorners)
                 {
-                    int pref = ThemeManager.Glass ? 2 : 0; // DWMWCP_ROUND
+                    int pref = 2; // DWMWCP_ROUND
                     DwmSetWindowAttribute(h, 33, ref pref, sizeof(int));
                 }
             }
