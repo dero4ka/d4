@@ -72,8 +72,36 @@ public sealed class StartButton : Border
         $"H{F(x + bl)} A{F(bl)},{F(bl)} 0 0 1 {F(x)},{F(y + h - bl)} " +
         $"V{F(y + tl)} A{F(tl)},{F(tl)} 0 0 1 {F(x + tl)},{F(y)} Z";
 
+    static string LogoStyle(string id) => id switch
+    {
+            "synthwave" => "neon",
+            "desert" => "sunset",
+            "midnight" => "ocean",
+            "mint" => "forest",
+            "lavender" => "light",
+            "gold" => "sunset",
+            "ice" => "light",
+            "volcano" => "scarlet",
+            "toxic" => "forest",
+            "cyber" => "neon",
+            "coral" => "sunset",
+            "lagoon" => "ocean",
+            "autumn" => "sunset",
+            "spring" => "forest",
+            "graphite" => "ocean",
+            "nebula" => "neon",
+            "candy" => "light",
+            "matrix" => "neon",
+            "sepia" => "light",
+            "rose" => "light",
+            "jungle" => "forest",
+            "steel" => "ocean",
+        _ => id,
+    };
+
     static UIElement Build(string id)
     {
+        id = LogoStyle(id);
         var c = new Canvas { Width = 24, Height = 24 };
 
         void Fill(string data, string brushKey, double opacity = 1)

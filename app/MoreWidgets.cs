@@ -26,7 +26,8 @@ public static class WidgetCatalog
         new("weather", "Погода", s => new WeatherWidget(s)),
         new("music", "Музыкальный плеер (то, что играет в Windows)", s => new MusicWidget(s)),
         new("calendar", "Календарь", s => new CalendarWidget(s)),
-        new("pomodoro", "Помодоро-таймер", s => new PomodoroWidget(s)),
+        new("pomodoro", "Таймер (свои минуты и секунды)", s => new TimerWidget(s)),
+        new("calc", "Калькулятор", s => new CalculatorWidget(s)),
         new("currency", "Курсы валют", s => new CurrencyWidget(s)),
         new("github", "GitHub-репозиторий", s => new GitHubWidget(s)),
         new("discord", "Discord-сервер", s => new DiscordWidget(s)),
@@ -385,44 +386,82 @@ public sealed class CalendarWidget : WidgetWindow
 
 // ---------- помодоро ----------
 
-public sealed class PomodoroWidget : WidgetWindow
+public sealed class TimerWidget : WidgetWindow
 {
-    readonly TextBlock phase = Ui.Text("Работа", 13, "MutedBrush", true);
-    readonly TextBlock time = Ui.Text("25:00", 46);
+    readonly TextBox min = Big(3);
+    readonly TextBox sec = Big(2);
+    readonly TextBlock caption = Ui.Text("Введите время и нажмите старт", 12, "MutedBrush");
     readonly ProgressBar bar = new() { Height = 6, Minimum = 0, Maximum = 100, BorderThickness = new Thickness(0), Margin = new Thickness(0, 8, 0, 8) };
-    readonly Chip toggle = W.Icon("", 18, "Старт / пауза");
+    readonly Chip toggle = W.Icon("\uE768", 18, "Старт / пауза");
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) };
-    bool work = true, running;
+    bool running;
     int left, total;
 
-    public PomodoroWidget(Settings s) : base(s, "pomodoro", "D4 Pomodoro", 260, 0, 1400, 100)
+    static TextBox Big(int maxLen)
     {
-        time.FontWeight = FontWeights.Light;
-        time.HorizontalAlignment = HorizontalAlignment.Center;
-        phase.HorizontalAlignment = HorizontalAlignment.Center;
+        var tb = W.Input("Можно вписать любое число");
+        tb.FontSize = 40;
+        tb.FontWeight = FontWeights.Light;
+        tb.Width = maxLen == 3 ? 100 : 80;
+        tb.MaxLength = maxLen;
+        tb.TextAlignment = TextAlignment.Center;
+        tb.BorderThickness = new Thickness(0, 0, 0, 2);
+        tb.Background = Brushes.Transparent;
+        tb.PreviewTextInput += (_, e) => e.Handled = !e.Text.All(char.IsDigit);
+        tb.GotKeyboardFocus += (_, _) => tb.SelectAll();
+        return tb;
+    }
+
+    public TimerWidget(Settings s) : base(s, "pomodoro", "D4 Timer", 280, 0, 1400, 100)
+    {
+        caption.HorizontalAlignment = HorizontalAlignment.Center;
         bar.SetResourceReference(Control.ForegroundProperty, "AccentBrush");
         bar.SetResourceReference(Control.BackgroundProperty, "HoverBrush");
 
-        toggle.Click += () =>
+        var colon = Ui.Text(":", 36);
+        colon.VerticalAlignment = VerticalAlignment.Center;
+        colon.Margin = new Thickness(2, 0, 2, 4);
+
+        var digits = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+        digits.Children.Add(min);
+        digits.Children.Add(colon);
+        digits.Children.Add(sec);
+
+        var labels = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+        var lm = Ui.Text("мин", 11, "MutedBrush");
+        lm.Width = 100;
+        lm.TextAlignment = TextAlignment.Center;
+        var ls = Ui.Text("сек", 11, "MutedBrush");
+        ls.Width = 80;
+        ls.TextAlignment = TextAlignment.Center;
+        ls.Margin = new Thickness(14, 0, 0, 0);
+        labels.Children.Add(lm);
+        labels.Children.Add(ls);
+
+        var presets = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 4, 0, 4) };
+        foreach (var m in new[] { 1, 5, 10, 15, 25, 45 })
         {
-            running = !running;
-            toggle.Label.Text = running ? "" : "";
-            if (running) timer.Start(); else timer.Stop();
-        };
-        var reset = W.Icon("", 16, "Сбросить");
-        reset.Click += () => Reset(true);
-        var skip = W.Icon("", 16, "Пропустить этап");
-        skip.Click += () => { work = !work; Reset(false); };
+            int mm = m;
+            var c = new Chip(mm + " мин", 12);
+            c.Click += () => { Stop(); SetTime(mm * 60); caption.Text = "Нажмите старт"; };
+            presets.Children.Add(c);
+        }
+
+        toggle.Click += () => { if (running) Stop(); else Start(); };
+        var reset = W.Icon("\uE72C", 16, "Сбросить");
+        reset.Click += () => { Stop(); SetTime(Math.Max(1, S.TimerSeconds)); bar.Value = 0; caption.Text = "Введите время и нажмите старт"; };
 
         var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
         row.Children.Add(reset);
         row.Children.Add(toggle);
-        row.Children.Add(skip);
 
         var p = W.Panel();
-        p.Children.Add(phase);
-        p.Children.Add(time);
+        p.Children.Add(W.Title("ТАЙМЕР"));
+        p.Children.Add(digits);
+        p.Children.Add(labels);
         p.Children.Add(bar);
+        p.Children.Add(caption);
+        p.Children.Add(presets);
         p.Children.Add(row);
         Card.Child = p;
 
@@ -430,35 +469,189 @@ public sealed class PomodoroWidget : WidgetWindow
         {
             if (--left <= 0)
             {
-                System.Media.SystemSounds.Asterisk.Play();
-                work = !work;
-                Reset(false);
+                Finish();
                 return;
             }
             Show_();
         };
-        Reset(true);
+        SetTime(Math.Max(1, S.TimerSeconds));
         Closed += (_, _) => timer.Stop();
     }
 
-    public override void OnSettingsChanged()
+    void SetTime(int seconds)
     {
-        if (!running) Reset(false);
-    }
-
-    void Reset(bool toWork)
-    {
-        if (toWork) work = true;
-        total = Math.Max(1, work ? S.PomodoroWork : S.PomodoroBreak) * 60;
-        left = total;
-        phase.Text = work ? "Работа" : "Отдых";
+        left = total = Math.Max(0, seconds);
         Show_();
     }
 
     void Show_()
     {
-        time.Text = (left / 60).ToString("00") + ":" + (left % 60).ToString("00");
-        bar.Value = (total - left) * 100.0 / total;
+        min.Text = (left / 60).ToString();
+        sec.Text = (left % 60).ToString("00");
+        bar.Value = total > 0 ? (total - left) * 100.0 / total : 0;
+    }
+
+    static int Num(string t) => int.TryParse(t, out var v) ? v : 0;
+
+    void Start()
+    {
+        int typed = Num(min.Text) * 60 + Num(sec.Text);
+        if (typed <= 0) { caption.Text = "Впишите время"; return; }
+        if (typed != left || left == 0) total = typed; // время поправили руками — отсчёт с новой отметки
+        left = typed;
+        S.TimerSeconds = total;
+        S.SaveSoon();
+        running = true;
+        min.IsReadOnly = sec.IsReadOnly = true;
+        toggle.Label.Text = "\uE769";
+        caption.Text = "Идёт отсчёт…";
+        Show_();
+        timer.Start();
+    }
+
+    void Stop()
+    {
+        running = false;
+        timer.Stop();
+        min.IsReadOnly = sec.IsReadOnly = false;
+        toggle.Label.Text = "\uE768";
+        if (left > 0 && total > 0 && left != total) caption.Text = "Пауза";
+    }
+
+    void Finish()
+    {
+        Stop();
+        left = 0;
+        Show_();
+        bar.Value = 100;
+        caption.Text = "Время вышло!";
+        System.Media.SystemSounds.Asterisk.Play();
+    }
+}
+
+// ---------- калькулятор ----------
+
+public sealed class CalculatorWidget : WidgetWindow
+{
+    readonly TextBlock expr = Ui.Text("", 12, "MutedBrush");
+    readonly TextBlock shown = Ui.Text("0", 34);
+    decimal acc;
+    string? op;
+    string entry = "0";
+    bool fresh = true;     // следующая цифра начинает новое число
+    bool error;
+
+    public CalculatorWidget(Settings s) : base(s, "calc", "D4 Calculator", 270, 0, 1100, 460)
+    {
+        expr.HorizontalAlignment = HorizontalAlignment.Right;
+        expr.Height = 18;
+        shown.HorizontalAlignment = HorizontalAlignment.Right;
+        shown.FontWeight = FontWeights.Light;
+        shown.Margin = new Thickness(0, 0, 0, 8);
+
+        var grid = new UniformGrid { Columns = 4 };
+        string[] keys =
+        {
+            "C", "⌫", "%", "÷",
+            "7", "8", "9", "×",
+            "4", "5", "6", "−",
+            "1", "2", "3", "+",
+            "±", "0", ",", "=",
+        };
+        foreach (var k in keys)
+        {
+            var key = k;
+            var c = new Chip(key, 18) { HorizontalAlignment = HorizontalAlignment.Stretch };
+            c.Label.HorizontalAlignment = HorizontalAlignment.Center;
+            c.Label.Margin = new Thickness(0, 7, 0, 7);
+            if ("÷×−+=".Contains(key)) c.Dyn(Border.BorderBrushProperty, "AccentBrush");
+            c.Click += () => Press(key);
+            grid.Children.Add(c);
+        }
+
+        var p = W.Panel();
+        p.Children.Add(W.Title("КАЛЬКУЛЯТОР"));
+        p.Children.Add(expr);
+        p.Children.Add(shown);
+        p.Children.Add(grid);
+        Card.Child = p;
+    }
+
+    static string Fmt(decimal v)
+    {
+        var t = v.ToString("0.##########", CultureInfo.InvariantCulture).Replace('.', ',');
+        return t;
+    }
+
+    decimal Cur() => decimal.TryParse(entry.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0;
+
+    void Press(string k)
+    {
+        try
+        {
+            if (error && k != "C") return;
+            if (k.Length == 1 && char.IsDigit(k[0]))
+            {
+                if (fresh || entry == "0") entry = k; else if (entry.Length < 15) entry += k;
+                fresh = false;
+            }
+            else switch (k)
+            {
+                case ",":
+                    if (fresh) { entry = "0,"; fresh = false; }
+                    else if (!entry.Contains(',')) entry += ",";
+                    break;
+                case "C":
+                    acc = 0; op = null; entry = "0"; fresh = true; error = false; expr.Text = "";
+                    break;
+                case "⌫":
+                    if (!fresh) entry = entry.Length > 1 ? entry[..^1] : "0";
+                    if (entry == "-" || entry == "") entry = "0";
+                    break;
+                case "±":
+                    if (entry != "0") entry = entry.StartsWith('-') ? entry[1..] : "-" + entry;
+                    break;
+                case "%":
+                    entry = Fmt(op == null ? Cur() / 100 : acc * Cur() / 100);
+                    fresh = false;
+                    break;
+                case "=":
+                    Apply();
+                    op = null;
+                    expr.Text = "";
+                    fresh = true;
+                    break;
+                default: // + − × ÷
+                    if (op != null && !fresh) Apply(); else acc = Cur();
+                    op = k;
+                    expr.Text = Fmt(acc) + " " + k;
+                    fresh = true;
+                    break;
+            }
+        }
+        catch (Exception)
+        {
+            error = true;
+            entry = "Ошибка";
+        }
+        shown.Text = entry;
+        shown.FontSize = entry.Length > 12 ? 22 : entry.Length > 9 ? 28 : 34;
+    }
+
+    void Apply()
+    {
+        if (op == null) { acc = Cur(); return; }
+        var b = Cur();
+        if (op == "÷" && b == 0) { error = true; entry = "Ошибка"; return; }
+        acc = op switch
+        {
+            "+" => acc + b,
+            "−" => acc - b,
+            "×" => acc * b,
+            "÷" => acc / b,
+            _ => b,
+        };
+        entry = Fmt(acc);
     }
 }
 

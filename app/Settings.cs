@@ -70,6 +70,7 @@ public sealed class Settings
     /// <summary>Частицы поверх обоев (пузыри, угольки, светлячки и т.д.).</summary>
     public bool AnimatedWallpaper { get; set; } = true;
     public int AnimFps { get; set; } = 24;
+    public int TimerSeconds { get; set; } = 300;
     /// <summary>Путь к картинке или видео. Пусто — сцена из текущей темы.</summary>
     public string? WallpaperPath { get; set; }
 

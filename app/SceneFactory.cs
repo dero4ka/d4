@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Windows;
@@ -145,6 +146,180 @@ public static class SceneFactory
             (C(t.S2), .62),
             (C(t.S3), 1))));
         return canvas;
+    }
+
+
+    static readonly Dictionary<string, string> Styles = new()
+    {
+        ["synthwave"] = "grid",
+        ["desert"] = "dunes",
+        ["midnight"] = "moon",
+        ["mint"] = "hills",
+        ["lavender"] = "hills",
+        ["gold"] = "dunes",
+        ["ice"] = "icepeaks",
+        ["volcano"] = "volcano",
+        ["toxic"] = "city",
+        ["cyber"] = "city",
+        ["coral"] = "waves",
+        ["lagoon"] = "waves",
+        ["autumn"] = "hills",
+        ["spring"] = "hills",
+        ["graphite"] = "mountains",
+        ["nebula"] = "nebula",
+        ["candy"] = "hills",
+        ["matrix"] = "city",
+        ["sepia"] = "dunes",
+        ["rose"] = "icepeaks",
+        ["jungle"] = "hills",
+        ["steel"] = "city",
+    };
+
+    /// <summary>Сцены новых тем: один из десяти стилей, цвета берутся из палитры темы.</summary>
+    static void BuildStyle(Canvas c, Theme t, string style)
+    {
+        var s1 = C(t.S1); var s2 = C(t.S2); var s3 = C(t.S3);
+        var m1 = C(t.M1); var m2 = C(t.M2); var m3 = C(t.M3);
+        var sun = C(t.Sun); var acc = C(t.Accent); var acc2 = C(t.Accent2);
+        void Add(Shape s) => c.Children.Add(s);
+
+        switch (style)
+        {
+            case "mountains":
+                Orb(c, 560, 140, 34, sun, Mix(sun, s3, .4), 220);
+                Add(Ridge("M0 300 L70 250 L150 285 L240 210 L330 280 L420 235 L520 290 L610 225 L700 280 L800 245 V360 H0Z", Mix(m1, s3, .5), Mix(m1, s2, .3), .8));
+                Add(Haze(250, 90, s3, .4));
+                Add(Ridge("M0 345 L90 290 L190 335 L300 270 L420 340 L540 285 L660 335 L800 295 V400 H0Z", Mix(m2, s3, .25), m2));
+                Add(Ridge("M0 450 L0 395 Q160 360 330 400 T650 392 T800 380 V450Z", Mix(m3, acc, .1), Mix(m3, Colors.Black, .4)));
+                break;
+
+            case "icepeaks":
+                Orb(c, 250, 130, 36, sun, Mix(sun, s3, .3), 240);
+                foreach (var (x, h, w) in new[] { (140.0, 200.0, 180.0), (360.0, 250.0, 220.0), (600.0, 220.0, 200.0), (740.0, 160.0, 140.0) })
+                {
+                    Add(P($"M{F(x - w / 2)} 340 L{F(x)} {F(340 - h)} L{F(x + w / 2)} 340Z", V((Mix(m1, Colors.White, .3), 0), (m1, 1))));
+                    Add(P($"M{F(x - w * .16)} {F(340 - h * .68)} L{F(x)} {F(340 - h)} L{F(x + w * .16)} {F(340 - h * .68)} L{F(x + w * .06)} {F(340 - h * .74)} L{F(x)} {F(340 - h * .66)} L{F(x - w * .07)} {F(340 - h * .74)}Z", Solid(Colors.White), .92));
+                    Add(P($"M{F(x)} {F(340 - h)} L{F(x + w / 2)} 340 L{F(x)} 340Z", Solid(Mix(m2, Colors.Black, .25)), .35));
+                }
+                Add(Haze(280, 90, Colors.White, .5));
+                Add(R(0, 340, 800, 110, V((Mix(m2, Colors.White, .3), 0), (m2, 1))));
+                Add(Ridge("M0 450 L0 410 Q200 380 420 415 T800 400 V450Z", Mix(m3, Colors.White, .2), m3));
+                break;
+
+            case "hills":
+                Orb(c, 560, 150, 40, sun, Mix(sun, s3, .4), 250);
+                Cloud(c, 220, 120, 1.0, t.Dark ? .25 : .8);
+                Cloud(c, 420, 190, .8, t.Dark ? .2 : .7);
+                Add(Ridge("M0 300 Q150 240 320 292 T620 270 T800 282 V400 H0Z", Mix(m1, s3, .35), m1, .9));
+                Add(Haze(270, 70, s3, .45));
+                Add(Ridge("M0 350 Q200 296 400 345 T800 322 V450 H0Z", Mix(m2, s3, .2), m2));
+                Add(Ridge("M0 450 L0 395 Q250 350 480 395 T800 372 V450Z", Mix(m3, acc, .12), Mix(m3, Colors.Black, .3)));
+                for (int i = 0; i < 16; i++)
+                    Add(E((i * 53 + 20) % 780, 390 + (i * 17) % 50, 3, 3, Solid(i % 2 == 0 ? acc : acc2), .8));
+                break;
+
+            case "dunes":
+                Orb(c, 300, 200, 52, sun, Mix(sun, s3, .4), 330, 1);
+                Add(Haze(210, 90, s3, .5));
+                Add(Ridge("M0 300 Q130 240 280 290 T560 268 T800 292 V380 H0Z", Mix(m1, s3, .45), m1, .95));
+                Add(Ridge("M0 360 Q170 296 340 350 T680 322 T800 340 V450 H0Z", Mix(m2, s3, .25), m2));
+                Add(Ridge("M0 450 L0 405 Q200 365 430 410 T800 388 V450Z", Mix(m3, acc, .1), Mix(m3, Colors.Black, .35)));
+                Add(P("M0 360 Q170 296 340 350 L340 360 Q170 310 0 372Z", Solid(sun), .12));
+                break;
+
+            case "waves":
+                Orb(c, 400, 175, 46, sun, Mix(sun, s3, .4), 300, 1);
+                Add(Haze(210, 90, s3, .4));
+                Add(Ridge("M0 292 L120 268 L230 288 L340 262 L450 290 L560 270 L700 290 L800 274 V320 H0Z", Mix(m1, s3, .4), m1, .8));
+                Add(R(0, 290, 800, 160, V((Mix(m2, s3, .3), 0), (m2, .4), (m3, 1))));
+                for (int i = 0; i < 16; i++)
+                {
+                    double y = 298 + i * 9, w = 30 + i * 18;
+                    Add(R(400 - w / 2, y, w, 2 + i * .1, Solid(sun), .5 - i * .028));
+                }
+                for (int i = 0; i < 26; i++)
+                    Add(P($"M{(i * 83 + 10) % 760} {305 + (i * 29) % 130} q12 -6 24 0 q12 6 24 0", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(sun, Colors.White, .4)); sh.StrokeThickness = 1.3; sh.Opacity = .25; }));
+                Add(P("M0 450 L0 410 Q100 385 190 450Z", V((Mix(m3, s2, .15), 0), (m3, 1))));
+                Add(P("M800 450 L800 400 Q700 380 610 450Z", V((Mix(m3, s2, .15), 0), (m3, 1))));
+                break;
+
+            case "city":
+            {
+                Orb(c, 590, 110, 30, sun, Mix(sun, s3, .3), 200, .8);
+                Add(Haze(180, 120, Mix(s3, acc, .25), .35));
+                var rnd = new Random(t.Id.GetHashCode() & 0xFFFF);
+                for (int layer = 0; layer < 2; layer++)
+                {
+                    double x = layer == 0 ? -10 : 0;
+                    while (x < 810)
+                    {
+                        double w = 36 + rnd.Next(0, 44), h = (layer == 0 ? 110 : 70) + rnd.Next(0, layer == 0 ? 170 : 120);
+                        var body = layer == 0 ? Mix(m1, s3, .2) : m2;
+                        Add(R(x, 350 - h, w, h, V((body, 0), (Mix(body, Colors.Black, .35), 1))));
+                        if (layer == 1)
+                            for (int k = 0; k < (int)(h / 16); k++)
+                                for (int j = 0; j < (int)(w / 14); j++)
+                                    if (rnd.Next(0, 3) != 0)
+                                        Add(R(x + 5 + j * 14, 350 - h + 8 + k * 16, 6, 7, Solid(Mix(acc, acc2, rnd.NextDouble())), .35 + rnd.NextDouble() * .5));
+                        x += w + rnd.Next(2, 10);
+                    }
+                }
+                Add(R(0, 350, 800, 100, V((Mix(m2, acc, .15), 0), (m3, .5), (Mix(m3, Colors.Black, .5), 1))));
+                for (int i = 0; i < 10; i++)
+                    Add(R(40 + i * 80, 354, 30, 80, V((A(acc, .22), 0), (A(acc2, 0), 1))));
+                break;
+            }
+
+            case "grid":
+            {
+                Orb(c, 400, 250, 110, sun, Mix(sun, acc, .6), 380, 1);
+                for (int i = 0; i < 7; i++)
+                    Add(R(280, 215 + i * 15, 240, 2 + i * 1.4, Solid(s1), .9));
+                Add(Ridge("M0 300 L60 250 L120 290 L190 235 L260 292 L330 262 L400 300 L470 262 L540 292 L620 238 L690 290 L750 255 L800 285 V320 H0Z", Mix(m1, s2, .3), Mix(m1, Colors.Black, .3)));
+                Add(R(0, 300, 800, 150, V((Mix(m3, acc, .25), 0), (Mix(m3, Colors.Black, .5), 1))));
+                for (int i = 0; i < 12; i++)
+                {
+                    double y = 300 + Math.Pow(i / 11.0, 2) * 150;
+                    Add(R(0, y, 800, 1.4, Solid(acc), .75));
+                }
+                for (int i = -10; i <= 10; i++)
+                    Add(L(400 + i * 14, 300, 400 + i * 120, 450, acc2, 1.3).Also(sh => sh.Opacity = .7));
+                Add(Haze(280, 50, acc, .35));
+                break;
+            }
+
+            case "moon":
+            {
+                Orb(c, 400, 160, 70, sun, Mix(sun, s3, .5), 320, .9);
+                foreach (var (cx, cy, r) in new[] { (380.0, 145.0, 12.0), (420.0, 185.0, 9.0), (365.0, 185.0, 6.0), (435.0, 140.0, 5.0) })
+                    Add(E(cx, cy, r, r, Solid(Mix(sun, s3, .5)), .35));
+                Add(Ridge("M0 320 Q150 270 320 316 T640 296 T800 312 V400 H0Z", Mix(m1, s3, .3), m1));
+                Add(Haze(290, 60, s3, .3));
+                Add(Ridge("M0 450 L0 380 Q220 340 460 388 T800 366 V450Z", Mix(m3, acc, .12), Mix(m3, Colors.Black, .4)));
+                Add(P(Pines(398, 70, 28, 18, 6, 7), Solid(Mix(m3, Colors.Black, .5)), .95));
+                break;
+            }
+
+            case "volcano":
+                Add(Haze(160, 130, acc, .22));
+                Add(Ridge("M0 330 L120 280 L230 320 L330 270 L400 300 L520 250 L640 310 L800 270 V400 H0Z", Mix(m1, s3, .15), m1, .8));
+                Add(P("M200 360 L360 175 L400 160 L440 175 L610 360Z", V((Mix(m2, s2, .3), 0), (m2, 1))));
+                Add(E(400, 165, 70, 22, Glow(acc2, 1)));
+                Add(P("M385 170 Q380 230 360 300 L350 360 L372 360 Q392 260 400 195Z", V((acc2, 0), (acc, 1)), .9));
+                Add(P("M418 172 Q430 240 455 310 L470 360 L452 360 Q425 270 408 195Z", V((acc2, 0), (acc, 1)), .8));
+                Add(Haze(270, 90, acc, .2));
+                Add(Ridge("M0 450 L0 385 Q200 350 420 392 T800 372 V450Z", Mix(m3, acc, .18), Mix(m3, Colors.Black, .5)));
+                break;
+
+            case "nebula":
+                Add(E(250, 170, 320, 150, Glow(acc, .55)));
+                Add(E(560, 230, 300, 140, Glow(acc2, .5)));
+                Add(E(420, 120, 220, 90, Glow(Mix(acc, acc2, .5), .4)));
+                Orb(c, 610, 120, 38, sun, Mix(sun, acc2, .5), 190, .6);
+                Add(E(610, 120, 80, 12, Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(sun, acc2, .4)); sh.StrokeThickness = 2; sh.Opacity = .6; }));
+                Add(Ridge("M0 450 L0 400 Q160 372 330 405 T640 398 T800 384 V450Z", Mix(m3, acc, .2), Mix(m3, Colors.Black, .5)));
+                break;
+        }
     }
 
     public static UIElement Build(Theme t)
@@ -444,6 +619,8 @@ public static class SceneFactory
             foreach (var (bx, by) in new[] { (210.0, 120.0), (240.0, 140.0), (440.0, 90.0) })
                 Add(P($"M{F(bx)} {F(by)} q6 -7 12 0 q6 -7 12 0", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(m3, Colors.Black, .2)); sh.StrokeThickness = 1.6; }));
         }
+
+        if (Styles.TryGetValue(t.Id, out var style)) BuildStyle(c, t, style);
 
         return new Viewbox { Stretch = Stretch.UniformToFill, Child = c };
     }

@@ -38,12 +38,16 @@ public sealed class SettingsWindow : Window
         Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = page };
 
         GlassFx.Attach(this);
-        BuildThemes();
-        BuildBar();
-        BuildWidgets();
-        BuildWallpaper();
-        BuildFolders();
-        BuildSystem();
+        // сбой в одном разделе не должен мешать открыться всему окну
+        foreach (var (name, build) in new (string, Action)[]
+        {
+            ("themes", BuildThemes), ("bar", BuildBar), ("widgets", BuildWidgets),
+            ("wallpaper", BuildWallpaper), ("folders", BuildFolders), ("system", BuildSystem),
+        })
+        {
+            try { build(); }
+            catch (Exception ex) { Settings.Log("settings section " + name + ": " + ex); }
+        }
 
         // тема могла смениться из меню бара — синхронизируем рамку на чипах
         ThemeManager.Changed += SyncThemeChips;

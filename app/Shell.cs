@@ -157,14 +157,35 @@ public sealed class Shell
 
     public void OpenSettings()
     {
-        if (settingsWindow != null)
+        try
         {
-            settingsWindow.Activate();
-            return;
+            if (settingsWindow != null)
+            {
+                if (!settingsWindow.IsLoaded)
+                {
+                    settingsWindow = null; // окно умерло, не успев закрыться: откроем заново
+                }
+                else
+                {
+                    if (settingsWindow.WindowState == WindowState.Minimized) settingsWindow.WindowState = WindowState.Normal;
+                    settingsWindow.Show();
+                    settingsWindow.Topmost = true; // выводим поверх остальных, потом возвращаем
+                    settingsWindow.Topmost = false;
+                    settingsWindow.Activate();
+                    return;
+                }
+            }
+            var w = new SettingsWindow(s, Reapply, AddFolder);
+            settingsWindow = w;
+            w.Closed += (_, _) => { if (ReferenceEquals(settingsWindow, w)) settingsWindow = null; };
+            w.Show();
+            w.Activate();
         }
-        settingsWindow = new SettingsWindow(s, Reapply, AddFolder);
-        settingsWindow.Closed += (_, _) => settingsWindow = null;
-        settingsWindow.Show();
+        catch (Exception ex)
+        {
+            Settings.Log("settings open: " + ex);
+            settingsWindow = null;
+        }
     }
 
     /// <summary>Смена темы на лету: без перезапуска и без пересборки окон.</summary>

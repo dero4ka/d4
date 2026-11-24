@@ -371,11 +371,13 @@ public sealed class BarWindow : Window
         f.Row(null, s.HideTaskbar ? "Показать панель задач Windows" : "Скрыть панель задач Windows", toggleTaskbar);
         f.Separator();
         f.Section("Тема");
+        var themeList = new StackPanel();
         foreach (var th in ThemeManager.All)
         {
             var id = th.Id;
-            f.Row(null, th.Name, () => setTheme(id), ThemeManager.Current.Id == id);
+            f.Row(null, th.Name, () => setTheme(id), ThemeManager.Current.Id == id, null, themeList);
         }
+        f.Add(new ScrollViewer { MaxHeight = 300, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = themeList });
         f.Separator();
         f.Row(null, "Выход", exit);
         Open(f);

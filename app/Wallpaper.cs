@@ -132,7 +132,8 @@ public sealed class WallpaperService
         string file = imagePath != null ? PrepareImage(imagePath) : RenderScene(theme, w, h);
         WriteDesk("WallpaperStyle", "10"); // «Заполнение»
         WriteDesk("TileWallpaper", "0");
-        Native.SetSystemWallpaper(file);
+        // SPI с рассылкой сообщений может ждать окна секундами, поэтому не в потоке интерфейса
+        System.Threading.Tasks.Task.Run(() => { try { Native.SetSystemWallpaper(file); } catch (Exception ex) { Settings.Log("set wallpaper: " + ex.Message); } });
         appliedKey = key;
     }
 

@@ -73,12 +73,13 @@ public sealed class WinKeyHook : IDisposable
                         {
                             bool lone = winDown && !other;
                             winDown = false;
-                            if (lone && !Native.IsForegroundFullscreen())
+                            if (lone)
                             {
                                 // «чужая» клавиша между нажатием и отпусканием Win отменяет открытие системного «Пуск»
+                                // (в играх тоже: иначе поверх игры выскакивает окно Windows)
                                 keybd_event(0xE8, 0, 0, UIntPtr.Zero);
                                 keybd_event(0xE8, 0, 2, UIntPtr.Zero);
-                                dispatcher.BeginInvoke(pressed);
+                                if (!Native.IsForegroundFullscreen()) dispatcher.BeginInvoke(pressed);
                             }
                         }
                     }

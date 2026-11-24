@@ -187,6 +187,81 @@ internal sealed class ParticleCanvas : FrameworkElement
                 layers.Add(new Layer { Mode = "spark", Colors = new[] { Col(t.Sun), white, Soft(t.Accent, .4) }, SizeMin = 3, SizeMax = 7, Glow = 2.2, Alpha = .95 });
                 layers.Add(new Layer { Mode = "drift", Colors = new[] { Soft(t.Accent, .3), Col(t.Accent2) }, SizeMin = 1, SizeMax = 2.4, VxMin = 4, VxMax = 14, VyMin = -8, VyMax = -2, Glow = 3.5, Alpha = .5 });
                 break;
+            case "synthwave":
+                layers.Add(new Layer { Mode = "twinkle", Colors = new[] { white, Soft(t.Accent, .5), Soft(t.Accent2, .5) }, SizeMin = 1, SizeMax = 2.4, Glow = 4.5, Alpha = 1 });
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Col(t.Accent2), Soft(t.Accent, .4) }, SizeMin = 1, SizeMax = 2, VxMin = 3, VxMax = 10, VyMin = -6, VyMax = 0, Glow = 3, Alpha = .5 });
+                break;
+            case "desert":
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Col(t.Sun), Soft(t.Accent, .35), Col(t.Accent2) }, SizeMin = 1.5, SizeMax = 3.6, VxMin = 8, VxMax = 26, VyMin = -8, VyMax = 6, Glow = 3.5, Alpha = .65 });
+                break;
+            case "midnight":
+                layers.Add(new Layer { Mode = "twinkle", Colors = new[] { white, Soft(t.Accent, .5) }, SizeMin = 1, SizeMax = 2.2, Glow = 4, Alpha = 1 });
+                layers.Add(new Layer { Mode = "shoot", Colors = new[] { white }, Alpha = 1 });
+                break;
+            case "mint":
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Col(t.Sun), Soft(t.Accent, .35), Col(t.Accent2) }, SizeMin = 1.5, SizeMax = 3.6, VxMin = 8, VxMax = 26, VyMin = -8, VyMax = 6, Glow = 3.5, Alpha = .65 });
+                break;
+            case "lavender":
+                layers.Add(new Layer { Mode = "petal", Colors = new[] { Col(t.Accent), Col(t.Accent2), Soft(t.Accent, .5) }, SizeMin = 4, SizeMax = 8, VyMin = 16, VyMax = 40, VxMin = 6, VxMax = 26, Alpha = .85 });
+                break;
+            case "gold":
+                layers.Add(new Layer { Mode = "spark", Colors = new[] { Col(t.Sun), Col(t.Accent), Col(t.Accent2) }, SizeMin = 3, SizeMax = 7, Glow = 2.4, Alpha = .95 });
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Soft(t.Accent, .3) }, SizeMin = 1, SizeMax = 2.2, VxMin = 3, VxMax = 12, VyMin = -8, VyMax = -2, Glow = 3, Alpha = .5 });
+                break;
+            case "ice":
+                layers.Add(new Layer { Mode = "snow", Colors = new[] { white, Soft(t.Accent, .6) }, SizeMin = 1.2, SizeMax = 4.4, VyMin = 14, VyMax = 44, VxMin = -8, VxMax = 8, Glow = 2.2, Alpha = .9 });
+                break;
+            case "volcano":
+                layers.Add(new Layer { Mode = "spark", Colors = new[] { Col(t.Sun), Col(t.Accent), Col(t.Accent2) }, SizeMin = 3, SizeMax = 7, Glow = 2.4, Alpha = .95 });
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Soft(t.Accent, .3) }, SizeMin = 1, SizeMax = 2.2, VxMin = 3, VxMax = 12, VyMin = -8, VyMax = -2, Glow = 3, Alpha = .5 });
+                break;
+            case "toxic":
+                layers.Add(new Layer { Mode = "rise", Colors = new[] { Col(t.Accent), Col(t.Accent2), white }, SizeMin = 1.5, SizeMax = 3.8, VyMin = -14, VyMax = -50, VxMin = -4, VxMax = 4, Glow = 4, Alpha = .7 });
+                break;
+            case "cyber":
+                layers.Add(new Layer { Mode = "rain", Colors = new[] { Soft(t.Accent, .4) }, SizeMin = 1, SizeMax = 1.6, VyMin = 520, VyMax = 820, VxMin = -90, VxMax = -60, Alpha = .4 });
+                layers.Add(new Layer { Mode = "twinkle", Colors = new[] { Col(t.Accent2), white }, SizeMin = 1, SizeMax = 1.8, Glow = 4, Alpha = .8 });
+                break;
+            case "coral":
+                layers.Add(new Layer { Mode = "rise", Colors = new[] { Col(t.Accent), Col(t.Accent2), white }, SizeMin = 1.5, SizeMax = 3.8, VyMin = -14, VyMax = -50, VxMin = -4, VxMax = 4, Glow = 4, Alpha = .7 });
+                break;
+            case "lagoon":
+                layers.Add(new Layer { Mode = "rise", Colors = new[] { Col(t.Accent), Col(t.Accent2), white }, SizeMin = 1.5, SizeMax = 3.8, VyMin = -14, VyMax = -50, VxMin = -4, VxMax = 4, Glow = 4, Alpha = .7 });
+                break;
+            case "autumn":
+                layers.Add(new Layer { Mode = "fall", Colors = new[] { Col(t.Accent), Col(t.Accent2), Soft(t.Accent, .3) }, SizeMin = 3, SizeMax = 7, VyMin = 14, VyMax = 38, VxMin = -10, VxMax = 14, Glow = 0, Alpha = .85 });
+                break;
+            case "spring":
+                layers.Add(new Layer { Mode = "petal", Colors = new[] { Col(t.Accent), Col(t.Accent2), Soft(t.Accent, .5) }, SizeMin = 4, SizeMax = 8, VyMin = 16, VyMax = 40, VxMin = 6, VxMax = 26, Alpha = .85 });
+                break;
+            case "graphite":
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Col(t.Sun), Soft(t.Accent, .35), Col(t.Accent2) }, SizeMin = 1.5, SizeMax = 3.6, VxMin = 8, VxMax = 26, VyMin = -8, VyMax = 6, Glow = 3.5, Alpha = .65 });
+                break;
+            case "nebula":
+                layers.Add(new Layer { Mode = "twinkle", Colors = new[] { white, Soft(t.Accent, .5) }, SizeMin = 1, SizeMax = 2.2, Glow = 4, Alpha = 1 });
+                layers.Add(new Layer { Mode = "shoot", Colors = new[] { white }, Alpha = 1 });
+                break;
+            case "candy":
+                layers.Add(new Layer { Mode = "petal", Colors = new[] { Col(t.Accent), Col(t.Accent2), Soft(t.Accent, .5) }, SizeMin = 4, SizeMax = 8, VyMin = 16, VyMax = 40, VxMin = 6, VxMax = 26, Alpha = .85 });
+                break;
+            case "matrix":
+                layers.Add(new Layer { Mode = "rain", Colors = new[] { Soft(t.Accent, .4) }, SizeMin = 1, SizeMax = 1.6, VyMin = 520, VyMax = 820, VxMin = -90, VxMax = -60, Alpha = .4 });
+                layers.Add(new Layer { Mode = "twinkle", Colors = new[] { Col(t.Accent2), white }, SizeMin = 1, SizeMax = 1.8, Glow = 4, Alpha = .8 });
+                break;
+            case "sepia":
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Col(t.Sun), Soft(t.Accent, .35), Col(t.Accent2) }, SizeMin = 1.5, SizeMax = 3.6, VxMin = 8, VxMax = 26, VyMin = -8, VyMax = 6, Glow = 3.5, Alpha = .65 });
+                break;
+            case "rose":
+                layers.Add(new Layer { Mode = "petal", Colors = new[] { Col(t.Accent), Col(t.Accent2), Soft(t.Accent, .5) }, SizeMin = 4, SizeMax = 8, VyMin = 16, VyMax = 40, VxMin = 6, VxMax = 26, Alpha = .85 });
+                break;
+            case "jungle":
+                layers.Add(new Layer { Mode = "firefly", Colors = new[] { Col(t.Accent2), Col(t.Sun) }, SizeMin = 1.8, SizeMax = 3.2, Glow = 6.5, Alpha = 1 });
+                layers.Add(new Layer { Mode = "drift", Colors = new[] { Col(t.Sun) }, SizeMin = 1, SizeMax = 2, VxMin = 3, VxMax = 12, VyMin = 2, VyMax = 8, Glow = 3, Alpha = .35 });
+                break;
+            case "steel":
+                layers.Add(new Layer { Mode = "rain", Colors = new[] { Soft(t.Accent, .4) }, SizeMin = 1, SizeMax = 1.6, VyMin = 520, VyMax = 820, VxMin = -90, VxMax = -60, Alpha = .4 });
+                layers.Add(new Layer { Mode = "twinkle", Colors = new[] { Col(t.Accent2), white }, SizeMin = 1, SizeMax = 1.8, Glow = 4, Alpha = .8 });
+                break;
             default: // светлая: пух и пыльца
                 layers.Add(new Layer { Mode = "drift", Colors = new[] { white, Soft(t.Accent, .6), Soft(t.Sun, .2) }, SizeMin = 2, SizeMax = 4.6, VxMin = 8, VxMax = 22, VyMin = 3, VyMax = 12, Glow = 3, Alpha = .75 });
                 break;
