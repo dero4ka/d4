@@ -76,7 +76,7 @@ public sealed class SettingsWindow : Window
         return body;
     }
 
-    void Field(StackPanel into, string label, string value, Action<string> set)
+    TextBox Field(StackPanel into, string label, string value, Action<string> set)
     {
         var l = Ui.Text(label, 12, "MutedBrush");
         l.Margin = new Thickness(0, 8, 0, 2);
@@ -93,6 +93,7 @@ public sealed class SettingsWindow : Window
             Commit();
         };
         into.Children.Add(tb);
+        return tb;
     }
 
     CheckBox Check(StackPanel into, string text, bool value, Action<bool> set)
@@ -246,6 +247,28 @@ public sealed class SettingsWindow : Window
         Field(body, "Валюты (коды через запятую)", s.Currencies, v => s.Currencies = v);
         Field(body, "Репозиторий GitHub (владелец/имя)", s.GithubRepo, v => s.GithubRepo = v);
         Field(body, "ID сервера Discord (в настройках сервера должен быть включён виджет)", s.DiscordGuild, v => s.DiscordGuild = v);
+
+        var aiTitle = Ui.Text("ИИ-помощник (любой OpenAI-совместимый сервис)", 13, "AccentBrush", true);
+        aiTitle.Margin = new Thickness(0, 14, 0, 0);
+        body.Children.Add(aiTitle);
+        var tbEndpoint = Field(body, "Адрес API", s.AiEndpoint, v => s.AiEndpoint = v);
+        var tbModel = Field(body, "Модель (пусто — по умолчанию у сервиса)", s.AiModel, v => s.AiModel = v);
+        var tbKey = Field(body, "Ключ API (хранится в настройках открытым текстом; для Pollinations не нужен)", s.AiKey, v => s.AiKey = v);
+        var presets = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+        presets.Children.Add(Button("Pollinations (без ключа)", () =>
+        {
+            s.AiEndpoint = tbEndpoint.Text = "https://text.pollinations.ai/openai";
+            s.AiModel = tbModel.Text = "";
+            s.AiKey = tbKey.Text = "";
+            Commit();
+        }));
+        presets.Children.Add(Button("OpenRouter (бесплатные модели, нужен ключ)", () =>
+        {
+            s.AiEndpoint = tbEndpoint.Text = "https://openrouter.ai/api/v1/chat/completions";
+            s.AiModel = tbModel.Text = "openrouter/free";
+            Commit();
+        }));
+        body.Children.Add(presets);
         var hint = Ui.Text("Виджеты можно перетаскивать мышью — положение запоминается.", 12, "MutedBrush");
         hint.Margin = new Thickness(0, 6, 0, 0);
         body.Children.Add(hint);

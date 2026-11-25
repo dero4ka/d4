@@ -29,6 +29,10 @@ public sealed class Settings
     public string City { get; set; } = "Москва";
     public string Currencies { get; set; } = "USD,EUR,CNY";
     public string GithubRepo { get; set; } = "";
+    // ИИ-виджет: любой OpenAI-совместимый сервис. По умолчанию — бесплатный Pollinations без ключа.
+    public string AiEndpoint { get; set; } = "https://text.pollinations.ai/openai";
+    public string AiModel { get; set; } = "";
+    public string AiKey { get; set; } = "";
     public string DiscordGuild { get; set; } = "";
     public int PomodoroWork { get; set; } = 25;
     public int PomodoroBreak { get; set; } = 5;

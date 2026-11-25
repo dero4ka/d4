@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,6 +30,7 @@ public static class WidgetCatalog
         new("calendar", "Календарь", s => new CalendarWidget(s)),
         new("pomodoro", "Таймер (свои минуты и секунды)", s => new TimerWidget(s)),
         new("calc", "Калькулятор", s => new CalculatorWidget(s)),
+        new("ai", "ИИ-помощник (чат на бесплатной модели)", s => new AiWidget(s)),
         new("currency", "Курсы валют", s => new CurrencyWidget(s)),
         new("github", "GitHub-репозиторий", s => new GitHubWidget(s)),
         new("discord", "Discord-сервер", s => new DiscordWidget(s)),
@@ -355,8 +358,9 @@ public sealed class CalendarWidget : WidgetWindow
 
     void Build()
     {
-        var title = shown.ToString("LLLL yyyy", ru);
-        header.Text = char.ToUpper(title[0], ru) + title.Substring(1);
+        // названия месяцев свои: не зависим от языковых данных системы
+        string[] months = { "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь" };
+        header.Text = months[shown.Month - 1] + " " + shown.Year;
         grid.Children.Clear();
 
         foreach (var d in new[] { "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс" })
@@ -946,5 +950,186 @@ public sealed class SnippetsWidget : WidgetWindow
             box.MouseRightButtonUp += (_, _) => { S.Snippets.Remove(snippet); S.SaveSoon(); Build(); };
             list.Children.Add(box);
         }
+    }
+}
+
+
+// ---------- ИИ-помощник ----------
+
+internal static class Ai
+{
+    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(90) };
+
+    /// <summary>Запрос к OpenAI-совместимому чату. Возвращает текст ответа либо понятное описание ошибки.</summary>
+    public static async Task<(string? Text, string? Error)> Ask(Settings s, List<(string Role, string Text)> history)
+    {
+        try
+        {
+            var msgs = new List<object>
+            {
+                new { role = "system", content = "Ты — помощник в виджете рабочего стола. Отвечай кратко и по делу, по умолчанию на русском." },
+            };
+            foreach (var m in history) msgs.Add(new { role = m.Role, content = m.Text });
+            var body = new Dictionary<string, object> { ["messages"] = msgs };
+            if (!string.IsNullOrWhiteSpace(s.AiModel)) body["model"] = s.AiModel.Trim();
+
+            using var req = new HttpRequestMessage(HttpMethod.Post, s.AiEndpoint.Trim());
+            req.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+            if (!string.IsNullOrWhiteSpace(s.AiKey)) req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", s.AiKey.Trim());
+            req.Headers.UserAgent.ParseAdd("D4/1.3");
+
+            using var resp = await Http.SendAsync(req);
+            var txt = await resp.Content.ReadAsStringAsync();
+            if (!resp.IsSuccessStatusCode)
+            {
+                int code = (int)resp.StatusCode;
+                var wait = resp.Headers.RetryAfter?.Delta is { } d ? " Повторите через " + (int)d.TotalSeconds + " с." : "";
+                if (code == 402 || code == 429) return (null, "Бесплатная модель отвечает не чаще, чем раз в полминуты." + wait);
+                if (code == 401 || code == 403) return (null, "Сервис просит ключ API (настройки → Виджеты → ИИ-помощник).");
+                Settings.Log("ai http " + code + ": " + txt);
+                return (null, "Ошибка сервиса: " + code + ".");
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(txt);
+                var content = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+                return (string.IsNullOrWhiteSpace(content) ? "(пустой ответ)" : content.Trim(), null);
+            }
+            catch (Exception)
+            {
+                // некоторые сервисы возвращают просто текст
+                return (txt.Trim(), null);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            return (null, "Время ожидания истекло.");
+        }
+        catch (Exception ex)
+        {
+            Settings.Log("ai: " + ex.Message);
+            return (null, "Нет связи с сервисом.");
+        }
+    }
+}
+
+public sealed class AiWidget : WidgetWindow
+{
+    readonly StackPanel log = new();
+    readonly ScrollViewer scroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+    readonly TextBox input = W.Input("Enter — отправить");
+    readonly List<(string Role, string Text)> history = new();
+    bool busy;
+
+    public AiWidget(Settings s) : base(s, "ai", "D4 AI", 340, 460, 1100, 40)
+    {
+        scroll.Content = log;
+        input.KeyDown += (_, e) =>
+        {
+            if (e.Key != Key.Enter) return;
+            e.Handled = true;
+            Send();
+        };
+
+        var send = W.Icon("\uE724", 16, "Отправить");
+        send.Click += Send;
+        var clear = W.Icon("\uE74D", 16, "Очистить диалог");
+        clear.Click += () =>
+        {
+            history.Clear();
+            log.Children.Clear();
+            Hello();
+        };
+
+        var inputRow = new Grid { Margin = new Thickness(0, 8, 0, 0) };
+        inputRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        inputRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        inputRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(send, 1);
+        Grid.SetColumn(clear, 2);
+        inputRow.Children.Add(input);
+        inputRow.Children.Add(send);
+        inputRow.Children.Add(clear);
+
+        var root = new Grid { Margin = new Thickness(16, 14, 16, 14) };
+        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var title = W.Title("ИИ-ПОМОЩНИК");
+        Grid.SetRow(scroll, 1);
+        Grid.SetRow(inputRow, 2);
+        root.Children.Add(title);
+        root.Children.Add(scroll);
+        root.Children.Add(inputRow);
+        Card.Child = root;
+
+        Hello();
+    }
+
+    void Hello()
+    {
+        string host;
+        try { host = new Uri(S.AiEndpoint).Host; } catch { host = "сервис не настроен"; }
+        Bubble("Привет! Я ИИ-помощник на бесплатной модели (" + host + "). Спросите что угодно. Клик по моему ответу копирует его.", false);
+    }
+
+    Border Bubble(string text, bool user)
+    {
+        var t = Ui.Text(text, 13, "TextBrush");
+        t.TextWrapping = TextWrapping.Wrap;
+        var b = new Border
+        {
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(10, 6, 10, 6),
+            Margin = new Thickness(user ? 30 : 0, 3, user ? 0 : 30, 3),
+            HorizontalAlignment = user ? HorizontalAlignment.Right : HorizontalAlignment.Left,
+            BorderThickness = new Thickness(1),
+            Child = t,
+        };
+        if (user) b.Dyn(Border.BackgroundProperty, "HoverBrush");
+        b.Dyn(Border.BorderBrushProperty, user ? "AccentBrush" : "CardBorderBrush");
+        if (!user)
+        {
+            b.Cursor = Cursors.Hand;
+            b.ToolTip = "Клик — скопировать";
+            b.MouseLeftButtonUp += (_, _) =>
+            {
+                try { Clipboard.SetText(text); } catch { /* буфер занят */ }
+            };
+        }
+        log.Children.Add(b);
+        scroll.ScrollToEnd();
+        return b;
+    }
+
+    void Send()
+    {
+        var text = input.Text.Trim();
+        if (busy || text.Length == 0) return;
+        input.Clear();
+        Bubble(text, true);
+        history.Add(("user", text));
+        while (history.Count > 12) history.RemoveAt(0);
+        _ = Run();
+    }
+
+    async Task Run()
+    {
+        busy = true;
+        var wait = Bubble("Думаю…", false);
+        var (answer, error) = await Ai.Ask(S, history);
+        log.Children.Remove(wait);
+        if (answer != null)
+        {
+            history.Add(("assistant", answer));
+            Bubble(answer, false);
+        }
+        else
+        {
+            history.RemoveAt(history.Count - 1); // неотвеченный вопрос не копим
+            Bubble("⚠ " + error, false);
+        }
+        busy = false;
     }
 }

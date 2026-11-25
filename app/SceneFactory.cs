@@ -117,7 +117,7 @@ public static class SceneFactory
             sb.Append($"M{F(x - ww * .38)} {F(baseY - hh * .36)}L{F(x)} {F(baseY - hh * .86)}L{F(x + ww * .38)} {F(baseY - hh * .36)}Z ");
             sb.Append($"M{F(x - ww * .26)} {F(baseY - hh * .62)}L{F(x)} {F(baseY - hh)}L{F(x + ww * .26)} {F(baseY - hh * .62)}Z ");
         }
-        return sb.ToString();
+        return "F1 " + sb; // NonZero: пересекающиеся ярусы сливаются в одну сплошную ёлку, без дыр
     }
 
     static void Cloud(Canvas c, double x, double y, double s, double a = .8)
@@ -151,29 +151,39 @@ public static class SceneFactory
 
     static readonly Dictionary<string, string> Styles = new()
     {
-        ["synthwave"] = "grid",
         ["desert"] = "dunes",
         ["midnight"] = "moon",
-        ["mint"] = "hills",
-        ["lavender"] = "hills",
-        ["gold"] = "dunes",
+        ["mint"] = "bamboo",
+        ["lavender"] = "field",
+        ["gold"] = "pyramids",
         ["ice"] = "icepeaks",
-        ["volcano"] = "volcano",
-        ["toxic"] = "city",
+        ["toxic"] = "industrial",
         ["cyber"] = "city",
-        ["coral"] = "waves",
-        ["lagoon"] = "waves",
-        ["autumn"] = "hills",
-        ["spring"] = "hills",
-        ["graphite"] = "mountains",
+        ["coral"] = "reef",
+        ["lagoon"] = "island",
+        ["autumn"] = "trees",
+        ["spring"] = "rainbow",
+        ["graphite"] = "lowpoly",
+        ["candy"] = "sweets",
+        ["matrix"] = "matrixrain",
+        ["sepia"] = "village",
+        ["rose"] = "balloons",
+        ["jungle"] = "jungle",
+        ["steel"] = "bridge",
+        ["synthwave"] = "grid",
+        ["volcano"] = "volcano",
         ["nebula"] = "nebula",
-        ["candy"] = "hills",
-        ["matrix"] = "city",
-        ["sepia"] = "dunes",
-        ["rose"] = "icepeaks",
-        ["jungle"] = "hills",
-        ["steel"] = "city",
     };
+    /// <summary>Лист или побег: заострённая форма от точки (x, y) под углом (градусы), длиной len и шириной w.</summary>
+    static Shape Leaf(double x, double y, double angleDeg, double len, double w, Color col)
+    {
+        double a = angleDeg * Math.PI / 180, ca = Math.Cos(a), sa = Math.Sin(a);
+        double tx = x + ca * len, ty = y + sa * len;
+        double mx = x + ca * len * .5, my = y + sa * len * .5;
+        double nx = -sa * w, ny = ca * w;
+        double droop = len * .12;
+        return P($"M{F(x)} {F(y)} Q{F(mx + nx)} {F(my + ny + droop)} {F(tx)} {F(ty + droop * 1.6)} Q{F(mx - nx)} {F(my - ny + droop)} {F(x)} {F(y)}Z", Solid(col));
+    }
 
     /// <summary>Сцены новых тем: один из десяти стилей, цвета берутся из палитры темы.</summary>
     static void BuildStyle(Canvas c, Theme t, string style)
@@ -185,6 +195,350 @@ public static class SceneFactory
 
         switch (style)
         {
+            case "bamboo":
+            {
+                var rnd = new Random(11);
+                Orb(c, 570, 120, 34, sun, Mix(sun, s3, .4), 230, .8);
+                Add(Ridge("M0 300 Q150 250 330 290 T640 270 T800 285 V400 H0Z", Mix(m1, s3, .45), m1, .6));
+                for (int layer = 0; layer < 3; layer++)
+                {
+                    int n = layer == 0 ? 26 : layer == 1 ? 14 : 6;
+                    double w = layer == 0 ? 5 : layer == 1 ? 11 : 24;
+                    var col = layer == 0 ? Mix(m1, s3, .3) : layer == 1 ? m2 : m3;
+                    for (int i = 0; i < n; i++)
+                    {
+                        double x = (i + .5) * 800.0 / n + rnd.Next(-12, 13);
+                        double top = layer == 2 ? -10 : 30 + rnd.Next(0, 80);
+                        Add(R(x, top, w, 460 - top, V((Mix(col, Colors.White, .15), 0), (col, .5), (Mix(col, Colors.Black, .3), 1)), layer == 0 ? .7 : 1));
+                        for (double y = top + 40; y < 450; y += 48 + layer * 10)
+                            Add(R(x - 1, y, w + 2, 2.5, Solid(Mix(col, Colors.Black, .45)), .8));
+                        if (layer < 2)
+                            for (int k = 0; k < 3; k++)
+                                Add(Leaf(x + w / 2, top + 20 + k * 30, k % 2 == 0 ? -35 - k * 12 : -145 + k * 12, 46 + layer * 20, 7 + layer * 3, Mix(col, acc, .35)));
+                    }
+                    if (layer == 0) Add(Haze(250, 120, s3, .4));
+                }
+                Add(R(0, 410, 800, 40, V((Mix(m3, acc, .2), 0), (Mix(m3, Colors.Black, .5), 1))));
+                break;
+            }
+
+            case "field":
+            {
+                Orb(c, 400, 262, 54, sun, Mix(sun, s3, .4), 340, 1);
+                Add(Ridge("M0 290 Q120 250 250 280 T480 268 T800 282 V300 H0Z", Mix(m1, s3, .4), m1));
+                Add(R(0, 282, 800, 168, V((Mix(m2, s3, .2), 0), (m3, 1))));
+                for (int k = -9; k < 9; k++)
+                {
+                    var col = k % 2 == 0 ? Mix(acc, Colors.Black, .1) : Mix(acc2, Colors.White, .15);
+                    Add(P($"M{F(400 + k * 4)} 282 L{F(400 + (k + 1) * 4)} 282 L{F(400 + (k + 1) * 120)} 450 L{F(400 + k * 120)} 450Z", Solid(col), .85));
+                }
+                for (int i = 0; i < 40; i++)
+                {
+                    double y = 284 + Math.Pow(i / 39.0, 2.2) * 160, sp = 40 + (y - 284) * 1.2;
+                    Add(R(400 - sp * 3 + (i * 37) % 160, y, 2 + (y - 284) / 18, 1.5, Solid(Mix(sun, Colors.White, .4)), .25));
+                }
+                Add(Haze(262, 40, s3, .55));
+                Add(P(Pines(292, 46, 18, 3, 40, 5), Solid(Mix(m1, Colors.Black, .3)), .9));
+                break;
+            }
+
+            case "trees":
+            {
+                var rnd = new Random(5);
+                Orb(c, 160, 130, 36, sun, Mix(sun, s3, .4), 240, .9);
+                Add(Ridge("M0 280 Q160 230 340 275 T660 260 T800 272 V340 H0Z", Mix(m1, s3, .35), m1, .85));
+                Add(Haze(250, 80, s3, .4));
+                Add(R(0, 330, 800, 120, V((Mix(m2, acc, .15), 0), (m3, 1))));
+                foreach (var (x, y, sc) in new[] { (90.0, 345.0, .8), (250.0, 335.0, .6), (430.0, 340.0, .75), (600.0, 332.0, .55), (730.0, 350.0, .95), (340.0, 360.0, 1.1), (520.0, 372.0, 1.25) })
+                {
+                    Add(R(x - 5 * sc, y - 70 * sc, 10 * sc, 74 * sc, Solid(Mix(m3, Colors.Black, .45))));
+                    var cols = new[] { acc, acc2, Mix(acc, sun, .4), Mix(acc2, Colors.Black, .2) };
+                    for (int k = 0; k < 6; k++)
+                        Add(E(x + rnd.Next(-34, 35) * sc, y - (95 + rnd.Next(-22, 26)) * sc, (30 + rnd.Next(0, 14)) * sc, (26 + rnd.Next(0, 10)) * sc, Solid(cols[k % 4]), .95));
+                }
+                for (int i = 0; i < 34; i++)
+                    Add(E((i * 71 + 15) % 790, 300 + (i * 43) % 150, 4, 2, Solid(i % 2 == 0 ? acc : acc2), .8));
+                Add(P("M300 450 Q380 400 460 380 Q520 365 600 360 L640 360 Q540 380 470 410 Q420 430 400 450Z", Solid(Mix(sun, m3, .6)), .4));
+                break;
+            }
+
+            case "rainbow":
+            {
+                Cloud(c, 150, 110, 1.1, .9);
+                Cloud(c, 650, 90, 1.0, .85);
+                Cloud(c, 420, 200, .8, .7);
+                string[] rb = { "#FF4B4B", "#FF9A3D", "#FFE14B", "#5CD65C", "#4BB8FF", "#6B6BFF", "#B05CFF" };
+                for (int i = 0; i < rb.Length; i++)
+                {
+                    double r = 330 - i * 14;
+                    Add(P($"M{F(400 - r)} 330 A{F(r)} {F(r)} 0 0 1 {F(400 + r)} 330", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(C(rb[i])); sh.StrokeThickness = 14; sh.Opacity = .55; }));
+                }
+                Orb(c, 700, 60, 30, sun, Mix(sun, s3, .3), 200, .8);
+                Add(Ridge("M0 330 Q200 275 420 325 T800 300 V450 H0Z", Mix(m1, Colors.White, .15), m1));
+                Add(Ridge("M0 390 Q260 340 520 385 T800 365 V450 H0Z", Mix(m2, Colors.White, .1), m2));
+                var cols2 = new[] { "#FF5C93", "#FFE14B", "#FFFFFF", "#B05CFF", "#FF9A3D" };
+                for (int i = 0; i < 70; i++)
+                {
+                    double x = (i * 61 + 13) % 790, y = 380 + (i * 37) % 66;
+                    Add(R(x, y, 1.5, 7, Solid(Mix(m3, Colors.Black, .1))));
+                    Add(E(x + .7, y, 3.4, 3.4, Solid(C(cols2[i % 5]))));
+                }
+                break;
+            }
+
+            case "sweets":
+            {
+                for (int i = 0; i < 9; i++)
+                    Add(R(0, i * 50, 800, 25, Solid(Colors.White), .08));
+                Add(E(150, 120, 100, 34, Solid(Colors.White), .85));
+                Add(E(190, 100, 70, 38, Solid(Colors.White), .9));
+                Add(E(600, 180, 120, 38, Solid(Colors.White), .8));
+                Add(E(640, 156, 80, 40, Solid(Colors.White), .85));
+                foreach (var (x, y, r, k) in new[] { (210.0, 250.0, 46.0, 0), (560.0, 230.0, 36.0, 1), (380.0, 280.0, 28.0, 0) })
+                {
+                    Add(R(x - 3, y, 6, 450 - y, Solid(Colors.White), .9));
+                    Add(E(x, y, r, r, Solid(k == 0 ? acc : acc2)));
+                    for (int j = 1; j < 5; j++)
+                        Add(E(x, y, r * (1 - j * .2), r * (1 - j * .2), Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Colors.White); sh.StrokeThickness = 3.5; sh.Opacity = .85; }));
+                }
+                Add(Ridge("M0 340 Q180 290 380 335 T800 312 V450 H0Z", Mix(m1, Colors.White, .25), m1));
+                Add(Ridge("M0 405 Q240 360 500 400 T800 380 V450 H0Z", Mix(m2, Colors.White, .2), m2));
+                var cs = new[] { acc, acc2, Colors.White, Mix(acc, acc2, .5) };
+                for (int i = 0; i < 70; i++)
+                    Add(R((i * 47 + 9) % 790, 350 + (i * 31) % 95, 8, 2.4, Solid(cs[i % 4]), .9));
+                break;
+            }
+
+            case "pyramids":
+            {
+                Orb(c, 400, 255, 90, sun, Mix(sun, s3, .4), 380, 1);
+                foreach (var (x, w, h) in new[] { (180.0, 180.0, 130.0), (560.0, 230.0, 170.0), (390.0, 120.0, 80.0) })
+                {
+                    Add(P($"M{F(x - w / 2)} 330 L{F(x)} {F(330 - h)} L{F(x + w / 2)} 330Z", V((Mix(m1, s3, .5), 0), (m1, 1))));
+                    Add(P($"M{F(x)} {F(330 - h)} L{F(x + w / 2)} 330 L{F(x + w * .1)} 330Z", Solid(Mix(m2, Colors.Black, .4)), .85));
+                }
+                Add(Haze(290, 70, s3, .5));
+                Add(Ridge("M0 450 L0 345 Q180 318 380 345 T800 336 V450Z", Mix(m2, s3, .3), m2));
+                Add(Ridge("M0 450 L0 395 Q240 365 470 396 T800 380 V450Z", Mix(m3, acc, .15), Mix(m3, Colors.Black, .4)));
+                foreach (var px in new[] { 90.0, 690.0 })
+                {
+                    Add(P($"M{F(px)} 400 Q{F(px + 6)} 350 {F(px + 2)} 310", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(m3, Colors.Black, .5)); sh.StrokeThickness = 4; }));
+                    for (int a = -150; a <= -30; a += 30) Add(Leaf(px + 2, 310, a, 44, 8, Mix(m3, Colors.Black, .4)));
+                }
+                break;
+            }
+
+            case "village":
+            {
+                Orb(c, 580, 130, 34, sun, Mix(sun, s3, .3), 240, .9);
+                Add(Ridge("M0 300 Q160 255 340 295 T660 280 T800 292 V360 H0Z", Mix(m1, s3, .4), m1, .8));
+                Add(R(0, 340, 800, 110, V((Mix(m2, s3, .15), 0), (m3, 1))));
+                int hi = 0;
+                foreach (var (x, y, w, h) in new[] { (70.0, 352.0, 100.0, 56.0), (230.0, 342.0, 78.0, 44.0), (390.0, 360.0, 120.0, 64.0), (570.0, 346.0, 88.0, 48.0), (700.0, 356.0, 96.0, 54.0) })
+                {
+                    Add(R(x, y - h, w, h, Solid(Mix(m2, s3, .2 + hi % 2 * .15))));
+                    Add(P($"M{F(x - 8)} {F(y - h)} L{F(x + w / 2)} {F(y - h - w * .38)} L{F(x + w + 8)} {F(y - h)}Z", Solid(Mix(acc, Colors.Black, .45 + hi % 3 * .1))));
+                    Add(R(x + w * .7, y - h - w * .3, 8, 22, Solid(Mix(m3, Colors.Black, .3))));
+                    Add(E(x + w * .7 + 4, y - h - w * .3 - 14, 10, 7, Solid(Colors.White), .35));
+                    Add(E(x + w * .7 + 12, y - h - w * .3 - 30, 14, 9, Solid(Colors.White), .22));
+                    Add(R(x + w * .2, y - h * .65, 14, 16, Solid(Mix(sun, acc2, .3)), .95));
+                    Add(R(x + w * .55, y - h * .65, 14, 16, Solid(Mix(sun, acc2, .3)), .95));
+                    hi++;
+                }
+                for (int i = 0; i < 40; i++)
+                    Add(R(i * 20, 392, 2, 22, Solid(Mix(m3, Colors.Black, .45)), .9));
+                Add(R(0, 400, 800, 3, Solid(Mix(m3, Colors.Black, .45))));
+                Add(R(0, 412, 800, 38, V((Mix(m3, acc, .1), 0), (Mix(m3, Colors.Black, .5), 1))));
+                break;
+            }
+
+            case "industrial":
+            {
+                Orb(c, 160, 110, 28, sun, Mix(sun, s3, .3), 200, .7);
+                Add(Haze(200, 130, acc, .22));
+                Add(Ridge("M0 330 L100 290 L200 320 L330 280 L480 316 L620 284 L800 312 V380 H0Z", Mix(m1, s3, .2), m1, .85));
+                foreach (var (x, w) in new[] { (470.0, 70.0), (590.0, 60.0), (690.0, 56.0) })
+                {
+                    Add(P($"M{F(x - w / 2)} 370 L{F(x - w * .32)} 190 L{F(x + w * .32)} 190 L{F(x + w / 2)} 370Z", V((Mix(m2, s3, .25), 0), (m2, 1))));
+                    Add(R(x - w * .32, 200, w * .64, 12, Solid(acc), .8));
+                    for (int k = 0; k < 4; k++)
+                        Add(E(x + 10 + k * 18, 170 - k * 40, 26 + k * 14, 16 + k * 8, Solid(Mix(s3, acc, .3)), .32 - k * .05));
+                }
+                Add(R(60, 300, 320, 80, V((Mix(m2, s3, .15), 0), (m3, 1))));
+                for (int i = 0; i < 12; i++)
+                    Add(R(74 + i * 25, 316, 12, 14, Solid(Mix(acc, acc2, i / 11.0)), .8));
+                Add(R(110, 260, 24, 44, Solid(m2)));
+                Add(R(250, 245, 30, 58, Solid(m2)));
+                Add(E(122, 252, 18, 10, Solid(Colors.White), .25));
+                Add(R(0, 370, 800, 80, V((Mix(m3, acc, .2), 0), (Mix(m3, Colors.Black, .6), 1))));
+                for (int i = 0; i < 6; i++)
+                    Add(E(100 + i * 120, 400 + (i % 2) * 20, 38, 8, Glow(acc, .8), .7));
+                Add(R(0, 372, 800, 3, Solid(acc), .7));
+                break;
+            }
+
+            case "matrixrain":
+            {
+                var rnd = new Random(77);
+                Add(Haze(220, 140, acc, .1));
+                for (int i = 0; i < 44; i++)
+                {
+                    double x = i * 18.2 + 4, head = 60 + rnd.Next(0, 340);
+                    int len = 6 + rnd.Next(0, 14);
+                    for (int j = 0; j < len; j++)
+                    {
+                        double y = head - j * 13;
+                        if (y < -10) break;
+                        Add(R(x, y, 7, 10, Solid(j == 0 ? Colors.White : Mix(acc, acc2, rnd.NextDouble() * .5)), j == 0 ? 1 : Math.Max(.08, .85 - j * .07)));
+                    }
+                }
+                Add(R(0, 400, 800, 50, V((A(acc, 0), 0), (A(acc, .25), 1))));
+                break;
+            }
+
+            case "bridge":
+            {
+                Orb(c, 400, 200, 40, sun, Mix(sun, s3, .4), 280, .8);
+                Add(Ridge("M0 300 L70 275 L90 300 L160 262 L210 300 L300 270 L360 300 L440 258 L520 300 L600 268 L680 300 L760 272 L800 296 V330 H0Z", Mix(m1, s3, .25), m1, .9));
+                Add(R(0, 310, 800, 140, V((Mix(m2, s3, .3), 0), (m2, .35), (m3, 1))));
+                for (int i = 0; i < 14; i++)
+                    Add(R(60 + (i * 97) % 700, 345 + i * 6.5, 80 - i * 3, 1.6, Solid(sun), .35 - i * .02));
+                foreach (var tx in new[] { 250.0, 550.0 })
+                {
+                    Add(R(tx - 9, 150, 18, 190, V((Mix(m1, s3, .2), 0), (m1, 1))));
+                    Add(R(tx - 14, 150, 28, 8, Solid(Mix(m1, Colors.Black, .2))));
+                    Add(R(tx - 14, 215, 28, 6, Solid(Mix(m1, Colors.Black, .2))));
+                    Add(E(tx, 146, 6, 6, Glow(acc, 1)));
+                }
+                foreach (var d in new[] { "M0 300 Q125 330 250 150", "M250 150 Q400 330 550 150", "M550 150 Q675 330 800 300" })
+                    Add(P(d, Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(m1, s3, .3)); sh.StrokeThickness = 3; }));
+                for (double x = 270; x < 540; x += 14)
+                {
+                    double tt = (x - 250) / 300.0, y = (1 - tt) * (1 - tt) * 150 + 2 * (1 - tt) * tt * 330 + tt * tt * 150;
+                    Add(L(x, y, x, 334, Mix(m1, s3, .25), 1));
+                }
+                Add(R(0, 330, 800, 10, V((Mix(m1, s3, .3), 0), (Mix(m1, Colors.Black, .3), 1))));
+                for (int i = 0; i < 40; i++)
+                    Add(R(i * 20 + 4, 332, 3, 3, Solid(i % 3 == 0 ? acc : sun), .85));
+                break;
+            }
+
+            case "reef":
+            {
+                var rnd = new Random(23);
+                for (int i = 0; i < 7; i++)
+                    Add(P($"M{F(80 + i * 110)} 0 L{F(130 + i * 110)} 0 L{F(i * 110 + 20)} 450 L{F(i * 110 - 60)} 450Z", Solid(Colors.White), .07));
+                Add(Ridge("M0 450 L0 360 Q140 320 300 372 T640 366 T800 350 V450Z", Mix(m2, s3, .15), Mix(m3, Colors.Black, .3)));
+                foreach (var (x, y, hh, col) in new[] { (90.0, 400.0, 90.0, acc), (210.0, 410.0, 70.0, acc2), (470.0, 405.0, 110.0, acc), (640.0, 400.0, 80.0, acc2), (740.0, 410.0, 100.0, acc) })
+                {
+                    for (int b = -2; b <= 2; b++)
+                    {
+                        double bx = x + b * 14;
+                        Add(P($"M{F(x)} {F(y)} Q{F(x + b * 8)} {F(y - hh * .5)} {F(bx + b * 6)} {F(y - hh + Math.Abs(b) * 12)}", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(col, Colors.Black, Math.Abs(b) * .08)); sh.StrokeThickness = 8; sh.StrokeStartLineCap = PenLineCap.Round; sh.StrokeEndLineCap = PenLineCap.Round; }));
+                        Add(E(bx + b * 6, y - hh + Math.Abs(b) * 12, 6, 6, Solid(Mix(col, Colors.White, .4))));
+                    }
+                }
+                for (int i = 0; i < 9; i++)
+                {
+                    double x = 40 + i * 90, h2 = 60 + (i * 37) % 60;
+                    Add(P($"M{F(x)} 450 Q{F(x + 12)} {F(450 - h2 / 2)} {F(x)} {F(450 - h2)}", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(m3, acc2, .3)); sh.StrokeThickness = 4; sh.Opacity = .8; }));
+                }
+                foreach (var (fx, fy, fs) in new[] { (180.0, 200.0, 1.0), (260.0, 230.0, .8), (560.0, 160.0, 1.2), (620.0, 260.0, .9), (400.0, 120.0, .7) })
+                {
+                    Add(E(fx, fy, 16 * fs, 8 * fs, Solid(Mix(acc2, Colors.White, .2))));
+                    Add(P($"M{F(fx + 12 * fs)} {F(fy)} L{F(fx + 26 * fs)} {F(fy - 8 * fs)} L{F(fx + 26 * fs)} {F(fy + 8 * fs)}Z", Solid(Mix(acc, Colors.White, .1))));
+                    Add(E(fx - 8 * fs, fy - 2 * fs, 2 * fs, 2 * fs, Solid(Colors.Black)));
+                }
+                for (int i = 0; i < 24; i++)
+                    Add(E(rnd.Next(0, 800), rnd.Next(40, 380), 2 + i % 4, 2 + i % 4, Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Colors.White); sh.StrokeThickness = 1; sh.Opacity = .4; }));
+                break;
+            }
+
+            case "island":
+            {
+                Orb(c, 300, 190, 46, sun, Mix(sun, s3, .4), 300, 1);
+                Add(Haze(220, 90, s3, .45));
+                Add(R(0, 285, 800, 165, V((Mix(m2, s3, .35), 0), (m2, .4), (m3, 1))));
+                for (int i = 0; i < 14; i++)
+                    Add(R(300 - (20 + i * 14) / 2, 294 + i * 9.5, 20 + i * 14, 2 + i * .1, Solid(sun), .5 - i * .03));
+                Add(E(560, 296, 150, 30, V((Mix(m3, acc, .3), 0), (Mix(m3, Colors.Black, .4), 1))));
+                Add(E(560, 286, 110, 18, Solid(Mix(m2, acc2, .25))));
+                foreach (var (px, ph, dir) in new[] { (545.0, 120.0, -1), (590.0, 96.0, 1), (500.0, 84.0, -1) })
+                {
+                    Add(P($"M{F(px)} 292 Q{F(px + dir * 16)} {F(292 - ph * .6)} {F(px + dir * 8)} {F(292 - ph)}", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(m3, Colors.Black, .5)); sh.StrokeThickness = 5; }));
+                    for (int a = -170; a <= -10; a += 28) Add(Leaf(px + dir * 8, 292 - ph, a, 56, 9, Mix(m3, acc, .25)));
+                }
+                for (int i = 0; i < 24; i++)
+                    Add(P($"M{(i * 79 + 10) % 760} {310 + (i * 29) % 130} q10 -5 20 0 q10 5 20 0", Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Mix(sun, Colors.White, .4)); sh.StrokeThickness = 1.3; sh.Opacity = .25; }));
+                Add(P("M0 450 L0 415 Q120 390 220 450Z", V((Mix(m3, acc, .15), 0), (m3, 1))));
+                break;
+            }
+
+            case "jungle":
+            {
+                var rnd = new Random(31);
+                Orb(c, 420, 90, 26, sun, Mix(sun, s3, .3), 200, .7);
+                Add(Ridge("M0 290 Q150 190 330 260 T640 210 T800 250 V400 H0Z", Mix(m1, s3, .35), m1, .9));
+                Add(R(500, 215, 26, 190, V((Colors.White, 0), (Mix(s3, Colors.White, .5), 1)), .75));
+                Add(E(513, 408, 52, 14, Solid(Colors.White), .5));
+                Add(Haze(250, 100, s3, .4));
+                for (int i = 0; i < 16; i++)
+                    Add(E(i * 52 + rnd.Next(-10, 10), 330 + rnd.Next(0, 24), 48 + rnd.Next(0, 24), 40 + rnd.Next(0, 18), Solid(Mix(m2, acc, .08 * (i % 3))), .95));
+                Add(R(0, 380, 800, 70, V((Mix(m3, acc, .12), 0), (Mix(m3, Colors.Black, .5), 1))));
+                foreach (var (x, y, dir) in new[] { (-10.0, 440.0, 1), (810.0, 440.0, -1), (60.0, 450.0, 1), (740.0, 450.0, -1) })
+                    for (int a = 0; a < 7; a++)
+                        Add(Leaf(x, y, dir > 0 ? -80 + a * 14 : -100 - a * 14, 170 + (a % 3) * 30, 30, Mix(m3, acc, .1 + a % 3 * .1)));
+                break;
+            }
+
+            case "balloons":
+            {
+                Cloud(c, 140, 300, 1.4, .8);
+                Cloud(c, 420, 340, 1.8, .75);
+                Cloud(c, 690, 300, 1.2, .8);
+                var cs = new[] { acc, acc2, Mix(acc, Colors.White, .5), Mix(acc2, sun, .3), Mix(acc, acc2, .5) };
+                int bi = 0;
+                foreach (var (x, y, sc) in new[] { (180.0, 160.0, 1.0), (430.0, 110.0, .75), (620.0, 190.0, 1.2), (330.0, 250.0, .55), (740.0, 90.0, .5) })
+                {
+                    var col = cs[bi++ % cs.Length];
+                    Add(E(x, y, 44 * sc, 54 * sc, V((Mix(col, Colors.White, .35), 0), (col, 1))));
+                    for (int k = -1; k <= 1; k++)
+                        Add(E(x + k * 16 * sc, y, 14 * sc, 54 * sc, Solid(Colors.Transparent)).Also(sh => { sh.Stroke = Solid(Colors.White); sh.StrokeThickness = 2; sh.Opacity = .5; }));
+                    Add(L(x - 24 * sc, y + 48 * sc, x - 10 * sc, y + 84 * sc, Mix(m3, Colors.Black, .3), 1.2));
+                    Add(L(x + 24 * sc, y + 48 * sc, x + 10 * sc, y + 84 * sc, Mix(m3, Colors.Black, .3), 1.2));
+                    Add(R(x - 11 * sc, y + 84 * sc, 22 * sc, 14 * sc, Solid(Mix(m3, Colors.Black, .1))));
+                }
+                Add(Ridge("M0 450 L0 395 Q200 362 420 398 T800 380 V450Z", Mix(m2, Colors.White, .2), m2));
+                break;
+            }
+
+            case "lowpoly":
+            {
+                var rnd = new Random(41);
+                Orb(c, 600, 120, 30, sun, Mix(sun, s3, .3), 210, .7);
+                for (int layer = 0; layer < 2; layer++)
+                {
+                    double baseY = layer == 0 ? 330 : 420;
+                    var col = layer == 0 ? Mix(m1, s3, .15) : m2;
+                    var pts = new List<(double X, double Y)>();
+                    for (double x = -40; x < 860; x += 70 + rnd.Next(0, 40))
+                        pts.Add((x, baseY - 60 - rnd.Next(0, layer == 0 ? 150 : 70)));
+                    for (int i = 0; i < pts.Count - 1; i++)
+                    {
+                        var a = pts[i]; var b = pts[i + 1];
+                        double mx = (a.X + b.X) / 2;
+                        Add(P($"M{F(a.X)} {F(a.Y)} L{F(b.X)} {F(b.Y)} L{F(mx)} 460Z", Solid(Mix(col, Colors.Black, .05 + rnd.NextDouble() * .4))));
+                        if (i > 0)
+                        {
+                            var p0 = pts[i - 1];
+                            Add(P($"M{F(a.X)} {F(a.Y)} L{F(p0.X)} {F(p0.Y)} L{F((p0.X + a.X) / 2)} 460Z", Solid(Mix(col, Colors.White, rnd.NextDouble() * .18))));
+                        }
+                    }
+                }
+                Add(Haze(300, 90, s3, .35));
+                break;
+            }
+
             case "mountains":
                 Orb(c, 560, 140, 34, sun, Mix(sun, s3, .4), 220);
                 Add(Ridge("M0 300 L70 250 L150 285 L240 210 L330 280 L420 235 L520 290 L610 225 L700 280 L800 245 V360 H0Z", Mix(m1, s3, .5), Mix(m1, s2, .3), .8));
@@ -267,6 +621,13 @@ public static class SceneFactory
                 Add(R(0, 350, 800, 100, V((Mix(m2, acc, .15), 0), (m3, .5), (Mix(m3, Colors.Black, .5), 1))));
                 for (int i = 0; i < 10; i++)
                     Add(R(40 + i * 80, 354, 30, 80, V((A(acc, .22), 0), (A(acc2, 0), 1))));
+                if (t.Id == "cyber")
+                    foreach (var (sx, sy, sw, sh2, k) in new[] { (60.0, 170.0, 14.0, 70.0, 0), (210.0, 120.0, 34.0, 12.0, 1), (330.0, 210.0, 12.0, 60.0, 1), (470.0, 150.0, 40.0, 12.0, 0), (640.0, 190.0, 14.0, 80.0, 1), (730.0, 110.0, 36.0, 10.0, 0) })
+                    {
+                        var nc = k == 0 ? acc : acc2;
+                        Add(E(sx + sw / 2, sy + sh2 / 2, sw + 22, sh2 + 22, Glow(nc, .9), .8));
+                        Add(R(sx, sy, sw, sh2, Solid(Mix(nc, Colors.White, .5))));
+                    }
                 break;
             }
 
