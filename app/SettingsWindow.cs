@@ -42,7 +42,7 @@ public sealed class SettingsWindow : Window
         foreach (var (name, build) in new (string, Action)[]
         {
             ("themes", BuildThemes), ("bar", BuildBar), ("widgets", BuildWidgets),
-            ("wallpaper", BuildWallpaper), ("folders", BuildFolders), ("system", BuildSystem),
+            ("wallpaper", BuildWallpaper), ("animations", BuildAnimations), ("folders", BuildFolders), ("system", BuildSystem),
         })
         {
             try { build(); }
@@ -151,6 +151,7 @@ public sealed class SettingsWindow : Window
         var body = Section("Бар");
         Check(body, "Включить бар вместо панели задач", s.BarEnabled, v => s.BarEnabled = v);
         Check(body, "Скрыть панель задач Windows", s.HideTaskbar, v => s.HideTaskbar = v);
+        Check(body, "Горячие углы: левый верхний — обзор окон, правый нижний — рабочий стол", s.HotCorners, v => s.HotCorners = v);
 
         var edgeRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 4) };
         edgeRow.Children.Add(Ui.Text("Положение:  ", 14, "MutedBrush"));
@@ -274,34 +275,91 @@ public sealed class SettingsWindow : Window
         body.Children.Add(hint);
     }
 
+    /// <summary>Строка «подпись + выпадающий список».</summary>
+    void ComboRow(StackPanel into, string label, string[] items, int index, Action<int> set)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 2) };
+        var l = Ui.Text(label, 14, "TextBrush");
+        l.VerticalAlignment = VerticalAlignment.Center;
+        l.Margin = new Thickness(0, 0, 10, 0);
+        row.Children.Add(l);
+        var box = new ComboBox { MinWidth = 120, FontSize = 14 };
+        foreach (var it in items) box.Items.Add(it);
+        box.SelectedIndex = index < 0 ? 0 : index;
+        box.SelectionChanged += (_, _) =>
+        {
+            if (box.SelectedIndex < 0) return;
+            set(box.SelectedIndex);
+            Commit();
+        };
+        row.Children.Add(box);
+        into.Children.Add(row);
+    }
+
+    void SubTitle(StackPanel into, string text)
+    {
+        var t = Ui.Text(text, 13, "AccentBrush", true);
+        t.Margin = new Thickness(0, 14, 0, 2);
+        into.Children.Add(t);
+    }
+
+    void BuildAnimations()
+    {
+        var body = Section("Анимации обоев");
+        Check(body, "Живые обои: анимация поверх картинки", s.AnimatedWallpaper, v => s.AnimatedWallpaper = v);
+
+        SubTitle(body, "Какие эффекты показывать");
+        foreach (var (id, text) in new[]
+        {
+            ("particles", "Частицы: пузыри, искры, светлячки, боке"),
+            ("weather", "Погода: дождь, снег, лепестки, туман, облака, молнии"),
+            ("sky", "Небо: метеоры, северное сияние, галактика, лучи света"),
+            ("water", "Вода: волны и круги"),
+            ("special", "Особые: птицы, салют, лавовые пузыри, цифровой дождь, сетка"),
+        })
+        {
+            var gid = id;
+            Check(body, text, !s.AnimOff.Contains(gid), v =>
+            {
+                if (v) s.AnimOff.Remove(gid);
+                else if (!s.AnimOff.Contains(gid)) s.AnimOff.Add(gid);
+            });
+        }
+
+        SubTitle(body, "Насколько насыщенно");
+        var densities = new[] { 50, 100, 160 };
+        ComboRow(body, "Количество:", new[] { "Меньше", "Обычное", "Больше" }, Array.IndexOf(densities, s.AnimDensity), i => s.AnimDensity = densities[i]);
+        var speeds = new[] { 50, 75, 100, 150, 200 };
+        ComboRow(body, "Скорость:", new[] { "50%", "75%", "100%", "150%", "200%" }, Array.IndexOf(speeds, s.AnimSpeed), i => s.AnimSpeed = speeds[i]);
+        var fps = new[] { 10, 15, 24, 30, 45, 60 };
+        ComboRow(body, "Частота кадров:", fps.Select(f => f + " fps").ToArray(), Array.IndexOf(fps, s.AnimFps), i =>
+        {
+            s.AnimFps = fps[i];
+            ParticleCanvas.Fps = s.AnimFps;
+        });
+        var hint = Ui.Text("Меньше кадров и частиц — легче для системы, особенно при включённом стекле.", 12, "MutedBrush");
+        hint.Margin = new Thickness(0, 2, 0, 0);
+        body.Children.Add(hint);
+
+        SubTitle(body, "Когда ставить на паузу");
+        Check(body, "Когда окно развёрнуто на весь экран", s.AnimPauseMaximized, v => s.AnimPauseMaximized = v);
+        Check(body, "В полноэкранных приложениях и играх", s.AnimPauseFullscreen, v => s.AnimPauseFullscreen = v);
+        Check(body, "Когда ноутбук работает от батареи", s.BatterySaver, v => { s.BatterySaver = v; ParticleCanvas.BatterySaver = v; });
+        Check(body, "Когда процессор загружен больше, чем на:", s.AnimPauseCpu, v => s.AnimPauseCpu = v);
+        var limits = new[] { 50, 70, 85, 95 };
+        ComboRow(body, "Порог загрузки:", limits.Select(l => l + "%").ToArray(), Array.IndexOf(limits, s.AnimCpuLimit), i => s.AnimCpuLimit = limits[i]);
+
+        SubTitle(body, "Когда включать");
+        Check(body, "Анимировать только в заданные часы", s.AnimSchedule, v => s.AnimSchedule = v);
+        Field(body, "С какого времени (ЧЧ:ММ)", s.AnimFrom, v => s.AnimFrom = v);
+        Field(body, "До какого времени (ЧЧ:ММ; можно через полночь, например 20:00 — 08:00)", s.AnimTo, v => s.AnimTo = v);
+    }
+
     void BuildWallpaper()
     {
         var body = Section("Обои");
         Check(body, "Менять обои Windows на обои D4", s.WallpaperEnabled, v => s.WallpaperEnabled = v);
-        Check(body, "Живые обои: частицы поверх картинки (пузыри, угольки, светлячки…)", s.AnimatedWallpaper, v => s.AnimatedWallpaper = v);
 
-        var fpsRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 2) };
-        var fpsLabel = Ui.Text("Частота кадров анимации:", 14, "TextBrush");
-        fpsLabel.VerticalAlignment = VerticalAlignment.Center;
-        fpsLabel.Margin = new Thickness(0, 0, 10, 0);
-        fpsRow.Children.Add(fpsLabel);
-        var fpsBox = new ComboBox { Width = 110, FontSize = 14 };
-        foreach (var f in new[] { 10, 15, 24, 30, 45, 60 }) fpsBox.Items.Add(f + " fps");
-        int fpsIndex = Array.IndexOf(new[] { 10, 15, 24, 30, 45, 60 }, s.AnimFps);
-        fpsBox.SelectedIndex = fpsIndex < 0 ? 2 : fpsIndex;
-        fpsBox.SelectionChanged += (_, _) =>
-        {
-            var values = new[] { 10, 15, 24, 30, 45, 60 };
-            if (fpsBox.SelectedIndex < 0) return;
-            s.AnimFps = values[fpsBox.SelectedIndex];
-            ParticleCanvas.Fps = s.AnimFps;
-            Commit();
-        };
-        fpsRow.Children.Add(fpsBox);
-        body.Children.Add(fpsRow);
-        var fpsHint = Ui.Text("Меньше — легче для системы, особенно при включённом стекле.", 12, "MutedBrush");
-        fpsHint.Margin = new Thickness(0, 0, 0, 4);
-        body.Children.Add(fpsHint);
 
         var current = Ui.Text(string.IsNullOrWhiteSpace(s.WallpaperPath) ? "Сейчас: пейзаж темы" : "Сейчас: " + System.IO.Path.GetFileName(s.WallpaperPath), 13, "MutedBrush");
         current.Margin = new Thickness(0, 6, 0, 6);
@@ -350,6 +408,7 @@ public sealed class SettingsWindow : Window
         }
         catch { /* нет доступа к реестру */ }
 
+        Check(body, "Горячие клавиши: Ctrl+Alt+Пробел — поиск, Ctrl+Alt+W — спрятать/показать виджеты", s.HotKeysEnabled, v => s.HotKeysEnabled = v);
         Check(body, "Красить системные окна Windows (Параметры, Проводник) в цвета темы", s.SyncWindowsTheme, v => s.SyncWindowsTheme = v);
 
         var cb = new CheckBox { Content = "Запускать вместе с Windows", IsChecked = auto, FontSize = 14, Margin = new Thickness(0, 4, 0, 4) };

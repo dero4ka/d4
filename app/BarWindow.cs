@@ -212,7 +212,7 @@ public sealed class BarWindow : Window
         timer.Tick += (_, _) => Tick();
         guard.Tick += (_, _) =>
         {
-            try { KeepTaskbarHidden(); } catch { /* следующий тик повторит */ }
+            try { KeepTaskbarHidden(); CheckCorners(); } catch { /* следующий тик повторит */ }
         };
         guard.Start();
         timer.Start();
@@ -369,6 +369,16 @@ public sealed class BarWindow : Window
         f.Row(null, "Настройки D4", openSettings);
         f.Row(null, "Меню Пуск и поиск", () => Launcher.Toggle(s));
         f.Row(null, s.HideTaskbar ? "Показать панель задач Windows" : "Скрыть панель задач Windows", toggleTaskbar);
+        f.Row(null, "Спрятать/показать виджеты (Ctrl+Alt+W)", () => Shell.Instance?.ToggleWidgets());
+        f.Row(null, "Не давать компьютеру засыпать", KeepAwake.Toggle, KeepAwake.On);
+        f.Separator();
+        f.Section("Таймер выключения компьютера");
+        foreach (var (label, minutes) in new[] { ("Через 30 минут", 30), ("Через 1 час", 60), ("Через 2 часа", 120) })
+        {
+            int mins = minutes;
+            f.Row(null, label, () => ShutdownTimer(mins));
+        }
+        f.Row(null, "Отменить выключение", () => ShutdownTimer(0));
         f.Separator();
         f.Section("Тема");
         var themeList = new StackPanel();
@@ -429,6 +439,16 @@ public sealed class BarWindow : Window
                 s.Save();
                 Refresh();
             });
+        }
+
+        if (it.Windows.Count > 0)
+        {
+            var top = it.Windows.ToList();
+            bool pinnedTop = Native.IsTopmost(top[0]);
+            f.Row(null, pinnedTop ? "Снять «поверх всех окон»" : "Поверх всех окон", () =>
+            {
+                foreach (var h in top) Native.SetTopmost(h, !pinnedTop);
+            }, pinnedTop);
         }
 
         if (it.Windows.Count > 1)
@@ -869,6 +889,47 @@ public sealed class BarWindow : Window
     }
 
     /// <summary>Explorer и некоторые действия (Win+клавиша, наведение на край) возвращают панель задач — прячем её снова.</summary>
+    /// <summary>Ставит или отменяет выключение компьютера через заданное число минут.</summary>
+    static void ShutdownTimer(int minutes)
+    {
+        try
+        {
+            if (minutes <= 0)
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("shutdown", "/a") { UseShellExecute = false, CreateNoWindow = true });
+                Shell.Notify("Выключение отменено");
+            }
+            else
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("shutdown", "/s /t " + minutes * 60) { UseShellExecute = false, CreateNoWindow = true });
+                Shell.Notify("Компьютер выключится через " + minutes + " мин. Отмена — в меню D4.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Settings.Log("shutdown timer: " + ex.Message);
+        }
+    }
+
+    int cornerHold;
+    string corner = "";
+
+    /// <summary>Горячие углы: курсор в углу чуть дольше полсекунды запускает действие.</summary>
+    void CheckCorners()
+    {
+        if (!s.HotCorners) { corner = ""; cornerHold = 0; return; }
+        var (x, y) = Native.CursorPos();
+        int w = Native.GetSystemMetrics(Native.SM_CXSCREEN), h = Native.GetSystemMetrics(Native.SM_CYSCREEN);
+        string now = x <= 1 && y <= 1 ? "tl" : x >= w - 2 && y >= h - 2 ? "br" : "";
+        if (now != corner) { corner = now; cornerHold = 0; return; }
+        if (now == "" || cornerHold < 0) return;
+        if (++cornerHold < 3) return;
+        cornerHold = -1; // пока курсор не уйдёт из угла, повторно не срабатываем
+        if (Native.IsForegroundFullscreen()) return;
+        if (now == "tl") TaskView.Toggle();
+        else Native.ShowDesktop();
+    }
+
     void KeepTaskbarHidden()
     {
         if (s.HideTaskbar && Native.IsTaskbarVisible())

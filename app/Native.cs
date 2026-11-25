@@ -28,6 +28,24 @@ internal static class Native
 
     public const uint SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOACTIVATE = 0x10;
     public static readonly IntPtr HWND_BOTTOM = new(1);
+    public static readonly IntPtr HWND_TOPMOST = new(-1);
+    public static readonly IntPtr HWND_NOTOPMOST = new(-2);
+    const long WS_EX_TOPMOST = 0x8;
+
+    [StructLayout(LayoutKind.Sequential)] struct PT { public int X, Y; }
+    [DllImport("user32.dll")] static extern bool GetCursorPos(out PT p);
+
+    /// <summary>Положение курсора на экране (в пикселях).</summary>
+    public static (int X, int Y) CursorPos() => GetCursorPos(out var p) ? (p.X, p.Y) : (-1, -1);
+
+    public static bool IsTopmost(IntPtr h) => (GetWindowLongPtr(h, GWL_EXSTYLE).ToInt64() & WS_EX_TOPMOST) != 0;
+
+    /// <summary>Включает или выключает режим «поверх всех окон» для чужого окна.</summary>
+    public static void SetTopmost(IntPtr h, bool on) =>
+        SetWindowPos(h, on ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+    /// <summary>Win+D: свернуть всё и показать рабочий стол (повторно — вернуть окна).</summary>
+    public static void ShowDesktop() => PressWinCombo(0x44);
 
     public const int SM_CXSCREEN = 0, SM_CYSCREEN = 1, SM_XVIRTUALSCREEN = 76, SM_YVIRTUALSCREEN = 77;
     const uint GW_OWNER = 4;
@@ -607,6 +625,19 @@ internal static class Native
         ulong dIdle = idle - prevIdle, dKernel = kernel - prevKernel, dUser = user - prevUser;
         prevIdle = idle; prevKernel = kernel; prevUser = user;
         ulong total = dKernel + dUser; // kernel уже включает idle
+        return total == 0 ? 0 : Math.Clamp((double)(total - dIdle) / total * 100.0, 0, 100);
+    }
+
+    static ulong aIdle, aKernel, aUser;
+
+    /// <summary>Загрузка процессора для анимаций — отдельный счётчик, чтобы не сбивать замеры виджета-монитора.</summary>
+    public static double CpuUsageAnim()
+    {
+        if (!GetSystemTimes(out var i, out var k, out var u)) return 0;
+        ulong idle = i.Value, kernel = k.Value, user = u.Value;
+        ulong dIdle = idle - aIdle, dKernel = kernel - aKernel, dUser = user - aUser;
+        aIdle = idle; aKernel = kernel; aUser = user;
+        ulong total = dKernel + dUser;
         return total == 0 ? 0 : Math.Clamp((double)(total - dIdle) / total * 100.0, 0, 100);
     }
 

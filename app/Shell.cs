@@ -13,6 +13,8 @@ public sealed class Shell
 
     BarWindow? bar;
     WinKeyHook? keyHook;
+    HotKeys? hotKeys;
+    bool widgetsHidden;
     readonly Dictionary<string, WidgetWindow> extras = new();
     readonly WallpaperService wallpaper;
     ClockWidget? clock;
@@ -74,17 +76,65 @@ public sealed class Shell
             keyHook = null;
         }
 
+        // глобальные горячие клавиши
+        if (s.HotKeysEnabled && hotKeys == null)
+        {
+            try
+            {
+                hotKeys = new HotKeys();
+                hotKeys.Add(1, 0x3, 0x20, () => Launcher.Toggle(s)); // Ctrl+Alt+Пробел — поиск
+                hotKeys.Add(2, 0x3, 0x57, ToggleWidgets);            // Ctrl+Alt+W — спрятать/показать виджеты
+            }
+            catch (Exception ex) { Settings.Log("hotkeys: " + ex.Message); }
+        }
+        else if (!s.HotKeysEnabled && hotKeys != null)
+        {
+            hotKeys.Dispose();
+            hotKeys = null;
+        }
+
         Toggle(ref clock, s.ClockWidget, () => new ClockWidget(s));
         Toggle(ref monitor, s.MonitorWidget, () => new MonitorWidget(s));
         Toggle(ref notes, s.NotesWidget, () => new NotesWidget(s));
 
         SyncExtras();
         SyncFolders();
+        ApplyWidgetVisibility();
 
         Toggle(ref bar, s.BarEnabled, () => new BarWindow(s, OpenSettings, ToggleTaskbar, Exit, SetTheme));
         bar?.ApplySettings();
 
         Native.SetTaskbarVisible(!(s.BarEnabled && s.HideTaskbar));
+    }
+
+    IEnumerable<WidgetWindow> AllWidgets()
+    {
+        if (clock != null) yield return clock;
+        if (monitor != null) yield return monitor;
+        if (notes != null) yield return notes;
+        foreach (var w in extras.Values) yield return w;
+        foreach (var w in folderWindows.Values) yield return w;
+    }
+
+    /// <summary>Прячет все виджеты и мини-папки с рабочего стола или возвращает их.</summary>
+    public void ToggleWidgets()
+    {
+        widgetsHidden = !widgetsHidden;
+        ApplyWidgetVisibility();
+        Notify(widgetsHidden ? "Виджеты спрятаны. Вернуть: Ctrl+Alt+W" : "Виджеты на месте");
+    }
+
+    void ApplyWidgetVisibility()
+    {
+        foreach (var w in AllWidgets().ToList())
+        {
+            try
+            {
+                if (widgetsHidden) { if (w.IsVisible) w.Hide(); }
+                else if (!w.IsVisible) { w.Show(); w.SendBack(); }
+            }
+            catch (Exception ex) { Settings.Log("widget visibility: " + ex.Message); }
+        }
     }
 
     /// <summary>Включает и выключает дополнительные виджеты (погода, музыка, календарь и др.).</summary>
@@ -205,17 +255,51 @@ public sealed class Shell
         Reapply();
     }
 
+    /// <summary>Значок D4 из самого exe; если не получилось — стандартный.</summary>
+    static System.Drawing.Icon AppIcon()
+    {
+        try
+        {
+            var path = Environment.ProcessPath;
+            if (path != null && System.IO.Path.GetFileName(path).Equals("D4.exe", StringComparison.OrdinalIgnoreCase))
+            {
+                var ico = System.Drawing.Icon.ExtractAssociatedIcon(path);
+                if (ico != null) return ico;
+            }
+        }
+        catch { /* возьмём стандартный */ }
+        return System.Drawing.SystemIcons.Application;
+    }
+
+    public static Shell? Instance { get; private set; }
+
+    /// <summary>Всплывающее уведомление у значка в трее.</summary>
+    public static void Notify(string text)
+    {
+        try { Instance?.tray?.ShowBalloonTip(4000, "D4", text, System.Windows.Forms.ToolTipIcon.Info); }
+        catch { /* уведомление не критично */ }
+    }
+
     void BuildTray()
     {
+        Instance = this;
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add("Настройки", null, (_, _) => OpenSettings());
         menu.Items.Add("Скрыть/показать панель задач Windows", null, (_, _) => ToggleTaskbar());
+        menu.Items.Add("Спрятать/показать виджеты (Ctrl+Alt+W)", null, (_, _) => ToggleWidgets());
+        var awake = new System.Windows.Forms.ToolStripMenuItem("Не давать компьютеру засыпать");
+        awake.Click += (_, _) =>
+        {
+            KeepAwake.Toggle();
+            awake.Checked = KeepAwake.On;
+        };
+        menu.Items.Add(awake);
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("Выход", null, (_, _) => Exit());
 
         tray = new System.Windows.Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = AppIcon(),
             Text = "D4",
             Visible = true,
             ContextMenuStrip = menu,
@@ -240,6 +324,9 @@ public sealed class Shell
 
         keyHook?.Dispose();
         keyHook = null;
+        hotKeys?.Dispose();
+        hotKeys = null;
+        KeepAwake.Set(false);
         RestoreTaskbar();
         try { SystemTheme.Restore(s); } catch (Exception ex) { Settings.Log("system theme restore: " + ex.Message); }
         s.Save();

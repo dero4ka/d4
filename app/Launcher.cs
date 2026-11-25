@@ -295,6 +295,60 @@ internal sealed class LauncherWindow : Window
         f.Show();
     }
 
+    /// <summary>Считает выражение вроде «2+2*3» или «(10+5)/4». Для обычного текста возвращает null.</summary>
+    static string? TryCalc(string q)
+    {
+        var e = q.Trim().TrimStart('=').Trim().Replace(',', '.').Replace('×', '*').Replace('÷', '/').Replace(':', '/');
+        if (e.Length < 3) return null;
+        foreach (var ch in e) if (!(char.IsDigit(ch) || " +-*/().%".Contains(ch))) return null;
+        if (!e.Any(char.IsDigit) || e.IndexOfAny(new[] { '+', '-', '*', '/', '%' }) < 0) return null;
+        try
+        {
+            var v = Convert.ToDouble(new System.Data.DataTable().Compute(e, null), System.Globalization.CultureInfo.InvariantCulture);
+            if (double.IsNaN(v) || double.IsInfinity(v)) return null;
+            return Math.Round(v, 10).ToString("0.##########", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',');
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Недавно открытые файлы из папки Recent Windows (без дублей).</summary>
+    static List<(string Name, string Path)> RecentFiles(int count)
+    {
+        var result = new List<(string, string)>();
+        try
+        {
+            var dir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Recent));
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var f in dir.EnumerateFiles("*.lnk").OrderByDescending(x => x.LastWriteTime).Take(60))
+            {
+                var name = System.IO.Path.GetFileNameWithoutExtension(f.Name);
+                if (!seen.Add(name)) continue;
+                result.Add((name, f.FullName));
+                if (result.Count >= count) break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Settings.Log("recent: " + ex.Message);
+        }
+        return result;
+    }
+
+    sealed record Cmd(string Name, string Icon, string[] Keys, Action Run);
+
+    IEnumerable<Cmd> Commands()
+    {
+        bool Ask(string text) => MessageBox.Show(text, "D4", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+        yield return new Cmd("Заблокировать компьютер", "\uE72E", new[] { "заблокировать", "блокировка", "lock" }, () => RunCommand("rundll32.exe", "user32.dll,LockWorkStation"));
+        yield return new Cmd("Сон", "\uE708", new[] { "сон", "спящий режим", "sleep" }, () => RunCommand("rundll32.exe", "powrprof.dll,SetSuspendState 0,1,0"));
+        yield return new Cmd("Выйти из учётной записи", "\uE7E8", new[] { "выйти", "выход из системы", "logout", "sign out" }, () => { if (Ask("Выйти из системы?")) RunCommand("shutdown", "/l"); });
+        yield return new Cmd("Перезагрузить компьютер", "\uE777", new[] { "перезагрузка", "перезагрузить", "restart", "reboot" }, () => { if (Ask("Перезагрузить компьютер?")) RunCommand("shutdown", "/r /t 0"); });
+        yield return new Cmd("Выключить компьютер", "\uE7E8", new[] { "выключить", "выключение", "завершение работы", "shutdown" }, () => { if (Ask("Выключить компьютер?")) RunCommand("shutdown", "/s /t 0"); });
+    }
+
     // ---------- список ----------
 
     const string EnKeys = "qwertyuiop[]asdfghjkl;'zxcvbnm,.";
@@ -341,6 +395,12 @@ internal sealed class LauncherWindow : Window
                 foreach (var p in s.Pinned.Take(18)) wrap.Children.Add(Tile(p));
                 list.Children.Add(wrap);
             }
+            var recent = RecentFiles(8);
+            if (recent.Count > 0)
+            {
+                Section("Недавние файлы");
+                foreach (var (name, path) in recent) AddRow(name, path);
+            }
             Section("Все приложения");
             foreach (var a in apps) AddRow(a.Name, a.Path);
         }
@@ -348,6 +408,36 @@ internal sealed class LauncherWindow : Window
         {
             var ql = q.ToLowerInvariant();
             var qs = SwapLayout(ql); // запрос, набранный не в той раскладке
+
+            // калькулятор прямо в поиске: «2+2*3», «15% от...» не нужен — просто выражение
+            var calc = TryCalc(q);
+            if (calc != null)
+            {
+                AddRow("= " + calc + "   (Enter — скопировать)", "", icon: "\uE8EF", run: () =>
+                {
+                    try { Clipboard.SetText(calc); } catch { /* буфер занят */ }
+                    Close();
+                });
+            }
+
+            // перевод единиц: «5 км в мили», «100 f to c»
+            var conv = UnitConvert.TryConvert(q);
+            if (conv != null)
+            {
+                AddRow("= " + conv + "   (Enter — скопировать)", "", icon: "\uE8EF", run: () =>
+                {
+                    try { Clipboard.SetText(conv); } catch { /* буфер занят */ }
+                    Close();
+                });
+            }
+
+            // быстрые команды системы
+            var cmdRows = Commands().Where(c => c.Keys.Any(k => ql.Length >= 2 && (k.StartsWith(ql) || k.StartsWith(qs) || (ql.Length >= 3 && k.Contains(ql))))).ToList();
+            if (cmdRows.Count > 0)
+            {
+                Section("Команды");
+                foreach (var c in cmdRows) AddRow(c.Name, "", icon: c.Icon, run: c.Run);
+            }
             var found = apps
                 .Where(a => a.Name.ToLowerInvariant().Contains(ql) || a.Name.ToLowerInvariant().Contains(qs))
                 .OrderBy(a => a.Name.ToLowerInvariant().StartsWith(ql) ? 0 : a.Name.ToLowerInvariant().Split(' ').Any(w => w.StartsWith(ql)) ? 1 : 2)
@@ -432,7 +522,7 @@ internal sealed class LauncherWindow : Window
         return b;
     }
 
-    void AddRow(string name, string path, string? icon = null, StackPanel? into = null, int insertAt = -1)
+    void AddRow(string name, string path, string? icon = null, StackPanel? into = null, int insertAt = -1, Action? run = null)
     {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
@@ -462,7 +552,7 @@ internal sealed class LauncherWindow : Window
         var row = new Row
         {
             Box = new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(10, 6, 10, 6), Background = Brushes.Transparent, Cursor = Cursors.Hand, Child = grid },
-            Run = () => RunAndClose(path),
+            Run = run ?? (() => RunAndClose(path)),
         };
         row.Box.MouseEnter += (_, _) =>
         {

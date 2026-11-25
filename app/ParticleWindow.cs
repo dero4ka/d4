@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -47,7 +48,14 @@ public sealed class ParticleWindow : Window
             {
                 Native.SendToBottom(hwnd);
                 // под развёрнутым окном частицы не видны — не тратим процессор
-                canvas.Paused = Native.IsForegroundCovering();
+                var c = ParticleCanvas.Cfg;
+                bool paused = (c.PauseMaximized && Native.IsForegroundCovering())
+                           || (c.PauseFullscreen && Native.IsForegroundFullscreen())
+                           || (ParticleCanvas.BatterySaver && OnBattery())
+                           || (c.PauseCpu && Native.CpuUsageAnim() > c.CpuLimit);
+                bool off = c.Schedule && !AnimConfig.InSchedule(c.From, c.To);
+                canvas.Visibility = off ? Visibility.Hidden : Visibility.Visible;
+                canvas.Paused = paused || off;
             }
             catch (Exception ex)
             {
@@ -59,6 +67,12 @@ public sealed class ParticleWindow : Window
             guard.Stop();
             canvas.Stop();
         };
+    }
+
+    static bool OnBattery()
+    {
+        try { return System.Windows.Forms.SystemInformation.PowerStatus.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline; }
+        catch { return false; }
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -102,6 +116,21 @@ internal sealed class ParticleCanvas : FrameworkElement
     public bool Paused { get; set; }
     /// <summary>Частота кадров анимации обоев (задаётся в настройках).</summary>
     public static int Fps { get; set; } = 24;
+    public static AnimConfig Cfg { get; set; } = new();
+    public static event Action? ReloadRequested;
+    /// <summary>Перестроить частицы (после смены набора эффектов или плотности).</summary>
+    public static void Reload() => ReloadRequested?.Invoke();
+
+    static string GroupOf(string mode) => mode switch
+    {
+        "rain" or "snow" or "petal" or "lightning" or "mist" or "clouds" => "weather",
+        "aurora" or "shoot" or "galaxy" or "rays" => "sky",
+        "waves" or "ripple" => "water",
+        "boids" or "fireworks" or "blobs" or "digital" or "grid" => "special",
+        _ => "particles",
+    };
+    /// <summary>Не анимировать обои, пока ноутбук работает от батареи.</summary>
+    public static bool BatterySaver { get; set; } = true;
 
     public ParticleCanvas()
     {
@@ -110,6 +139,7 @@ internal sealed class ParticleCanvas : FrameworkElement
         {
             Configure(ThemeManager.Current);
             ThemeManager.Changed += OnTheme;
+            ReloadRequested += OnTheme;
             CompositionTarget.Rendering += OnFrame;
             running = true;
         };
@@ -124,6 +154,7 @@ internal sealed class ParticleCanvas : FrameworkElement
         running = false;
         CompositionTarget.Rendering -= OnFrame;
         ThemeManager.Changed -= OnTheme;
+        ReloadRequested -= OnTheme;
     }
 
     static Color Col(string hex) => ThemeManager.C(hex);
@@ -303,15 +334,18 @@ internal sealed class ParticleCanvas : FrameworkElement
         if (t.Id == "synthwave")
             layers.Add(new Layer { Mode = "grid", Colors = new[] { Col(t.Accent) }, Alpha = 1 });
 
+        layers.RemoveAll(l => Cfg.Off.Contains(GroupOf(l.Mode)));
+
         double w = Math.Max(ActualWidth, 800), h = Math.Max(ActualHeight, 450);
         foreach (var l in layers)
         {
-            int count = l.Mode switch
+            int count0 = l.Mode switch
             {
                 "twinkle" => 18, "spark" => 14, "firefly" => 18, "rise" => 26, "fall" => 30, "petal" => 18, "snow" => 60,
                 "rain" => 80, "shoot" => 2, "aurora" => 0, "lightning" => 1, "rays" => 0, "mist" => 5, "bokeh" => 14, "ripple" => 6,
                 "boids" => 22, "galaxy" => 260, "digital" => 48, "fireworks" => 0, "blobs" => 7, "clouds" => 7, "waves" => 0, "grid" => 0, _ => 24,
             };
+            int count = count0 == 0 ? 0 : Math.Max(1, (int)Math.Round(count0 * Cfg.Density / 100.0));
             for (int i = 0; i < count; i++)
             {
                 var np = Spawn(l, w, h, true);
@@ -358,7 +392,7 @@ internal sealed class ParticleCanvas : FrameworkElement
         double dt = now - last;
         if (dt < 1.0 / Math.Clamp(Fps, 5, 120)) return;
         last = now;
-        dt = Math.Min(dt, .15);
+        dt = Math.Min(dt, .15) * Cfg.Speed / 100.0;
 
         double w = ActualWidth, h = ActualHeight;
         if (w < 10 || h < 10) return;
@@ -1028,5 +1062,41 @@ internal sealed class ParticleCanvas : FrameworkElement
                 dc.Pop();
             }
         }
+    }
+}
+
+/// <summary>Настройки анимации обоев в виде, удобном для кадров и таймера паузы.</summary>
+public sealed class AnimConfig
+{
+    public bool PauseMaximized = true, PauseFullscreen = true, PauseCpu, Schedule;
+    public int CpuLimit = 85, Density = 100, Speed = 100;
+    public TimeSpan From = new(20, 0, 0), To = new(8, 0, 0);
+    public HashSet<string> Off = new();
+
+    public static AnimConfig Load(Settings s)
+    {
+        var c = new AnimConfig
+        {
+            PauseMaximized = s.AnimPauseMaximized,
+            PauseFullscreen = s.AnimPauseFullscreen,
+            PauseCpu = s.AnimPauseCpu,
+            CpuLimit = Math.Clamp(s.AnimCpuLimit, 30, 100),
+            Schedule = s.AnimSchedule,
+            Density = Math.Clamp(s.AnimDensity, 20, 300),
+            Speed = Math.Clamp(s.AnimSpeed, 25, 300),
+            Off = new HashSet<string>(s.AnimOff),
+        };
+        if (TimeSpan.TryParse(s.AnimFrom, out var f)) c.From = f;
+        if (TimeSpan.TryParse(s.AnimTo, out var t)) c.To = t;
+        return c;
+    }
+
+    /// <summary>Признак того, что нужно перестроить частицы.</summary>
+    public string Signature => Density + "|" + string.Join(",", Off.OrderBy(x => x));
+
+    public static bool InSchedule(TimeSpan from, TimeSpan to)
+    {
+        var now = DateTime.Now.TimeOfDay;
+        return from <= to ? now >= from && now < to : now >= from || now < to;
     }
 }

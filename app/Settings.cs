@@ -75,6 +75,20 @@ public sealed class Settings
     public bool AnimatedWallpaper { get; set; } = true;
     public int AnimFps { get; set; } = 24;
     public int TimerSeconds { get; set; } = 300;
+    public bool HotCorners { get; set; }
+    public bool HotKeysEnabled { get; set; } = true;
+    public bool BatterySaver { get; set; } = true;
+    // настройки анимаций обоев
+    public bool AnimPauseMaximized { get; set; } = true;
+    public bool AnimPauseFullscreen { get; set; } = true;
+    public bool AnimPauseCpu { get; set; }
+    public int AnimCpuLimit { get; set; } = 85;
+    public bool AnimSchedule { get; set; }
+    public string AnimFrom { get; set; } = "20:00";
+    public string AnimTo { get; set; } = "08:00";
+    public int AnimDensity { get; set; } = 100;
+    public int AnimSpeed { get; set; } = 100;
+    public List<string> AnimOff { get; set; } = new();
     /// <summary>Путь к картинке или видео. Пусто — сцена из текущей темы.</summary>
     public string? WallpaperPath { get; set; }
 

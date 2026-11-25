@@ -31,6 +31,7 @@ public static class WidgetCatalog
         new("pomodoro", "Таймер (свои минуты и секунды)", s => new TimerWidget(s)),
         new("calc", "Калькулятор", s => new CalculatorWidget(s)),
         new("ai", "ИИ-помощник (чат на бесплатной модели)", s => new AiWidget(s)),
+        new("clipboard", "История буфера обмена (последние 25 копирований)", s => new ClipboardWidget(s)),
         new("currency", "Курсы валют", s => new CurrencyWidget(s)),
         new("github", "GitHub-репозиторий", s => new GitHubWidget(s)),
         new("discord", "Discord-сервер", s => new DiscordWidget(s)),
@@ -1131,5 +1132,111 @@ public sealed class AiWidget : WidgetWindow
             Bubble("⚠ " + error, false);
         }
         busy = false;
+    }
+}
+
+
+// ---------- история буфера обмена ----------
+
+public sealed class ClipboardWidget : WidgetWindow
+{
+    readonly StackPanel list = new();
+    readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(900) };
+    readonly List<string> items = new();
+    string last = "";
+
+    public ClipboardWidget(Settings s) : base(s, "clipboard", "D4 Clipboard", 320, 380, 1100, 520)
+    {
+        var clear = W.Icon("\uE74D", 14, "Очистить историю");
+        clear.HorizontalAlignment = HorizontalAlignment.Right;
+        clear.Click += () => { items.Clear(); Rebuild(); };
+
+        var head = new Grid();
+        head.Children.Add(W.Title("БУФЕР ОБМЕНА · только в памяти"));
+        head.Children.Add(clear);
+
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = list };
+        var root = new Grid { Margin = new Thickness(16, 12, 16, 14) };
+        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        Grid.SetRow(scroll, 1);
+        root.Children.Add(head);
+        root.Children.Add(scroll);
+        Card.Child = root;
+
+        timer.Tick += (_, _) => Poll();
+        timer.Start();
+        Closed += (_, _) => timer.Stop();
+        Poll();
+        Rebuild();
+    }
+
+    void Poll()
+    {
+        string? t = null;
+        try { if (Clipboard.ContainsText()) t = Clipboard.GetText(); }
+        catch { return; } // буфер занят другой программой — попробуем на следующем тике
+        if (string.IsNullOrWhiteSpace(t) || t == last || t.Length > 20000) return;
+        last = t;
+        items.Remove(t);
+        items.Insert(0, t);
+        while (items.Count > 25) items.RemoveAt(items.Count - 1);
+        Rebuild();
+    }
+
+    void Rebuild()
+    {
+        list.Children.Clear();
+        if (items.Count == 0)
+        {
+            var empty = Ui.Text("Скопируйте что-нибудь — оно появится здесь. Клик по записи копирует её снова.", 12, "MutedBrush");
+            empty.TextWrapping = TextWrapping.Wrap;
+            empty.Margin = new Thickness(0, 8, 0, 0);
+            list.Children.Add(empty);
+            return;
+        }
+        foreach (var item in items.ToList())
+        {
+            var shown = item.Replace("\r", "").Replace("\n", " ↵ ").Trim();
+            if (shown.Length > 160) shown = shown[..160] + "…";
+            var t = Ui.Text(shown, 12, "TextBrush");
+            t.TextWrapping = TextWrapping.Wrap;
+            t.MaxHeight = 34;
+            t.TextTrimming = TextTrimming.CharacterEllipsis;
+
+            var del = W.Icon("\uE711", 11, "Убрать из истории");
+            del.VerticalAlignment = VerticalAlignment.Top;
+            del.Click += () => { items.Remove(item); Rebuild(); };
+
+            var g = new Grid();
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(del, 1);
+            g.Children.Add(t);
+            g.Children.Add(del);
+
+            var row = new Border
+            {
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(10, 6, 4, 6),
+                Margin = new Thickness(0, 0, 0, 4),
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand,
+                ToolTip = item.Length > 600 ? item[..600] + "…" : item,
+                Background = Brushes.Transparent,
+                Child = g,
+            };
+            row.Dyn(Border.BorderBrushProperty, "CardBorderBrush");
+            row.MouseEnter += (_, _) => row.Dyn(Border.BackgroundProperty, "HoverBrush");
+            row.MouseLeave += (_, _) => row.Background = Brushes.Transparent;
+            row.MouseLeftButtonUp += (_, _) =>
+            {
+                try { Clipboard.SetText(item); last = item; } catch { /* буфер занят */ }
+                items.Remove(item);
+                items.Insert(0, item);
+                Rebuild();
+            };
+            list.Children.Add(row);
+        }
     }
 }

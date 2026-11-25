@@ -2,11 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/png" href="favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#1b1f27">
 <title>D4 — рабочий стол Windows, собранный под вас</title>
-<meta name="description" content="D4 — программа для Windows 10/11: своя панель вместо панели задач, меню «Пуск» с поиском, 35 тем с живыми обоями, режим стекла и 14 виджетов.">
+<meta name="description" content="D4 — программа для Windows 10/11: своя панель вместо панели задач, меню «Пуск» с поиском, 35 тем с живыми обоями, режим стекла и 15 виджетов.">
 <style>
 :root,[data-theme="ocean"]{
   --bg:#0c1228; --card:rgba(255,255,255,.06); --card-b:rgba(255,255,255,.12); --text:#eef2fb; --muted:#a9b4cc;
@@ -262,9 +263,9 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
 <div class="hero" id="home">
   <div class="hero-bg scene"><svg id="heroScene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice"></svg><canvas id="fx"></canvas></div>
   <div class="wrap">
-    <div class="badge"><i></i><span data-en="Version 1.4.0 · Windows 10/11">Версия 1.4.0 · Windows 10/11</span></div>
+    <div class="badge"><i></i><span data-en="Version 1.7.0 · Windows 10/11">Версия 1.7.0 · Windows 10/11</span></div>
     <h1 data-en="Windows desktop, <span>built around you</span>">Рабочий стол Windows, <span>собранный под вас</span></h1>
-    <p class="lead" data-en="D4 replaces the taskbar with your own bar, adds a Start menu with search, 14 desktop widgets, 35 themes with live wallpapers and a glass mode.">D4 заменяет панель задач своей панелью, добавляет меню «Пуск» с поиском, 14 виджетов на рабочий стол, 35 тем с живыми обоями и режим стекла.</p>
+    <p class="lead" data-en="D4 replaces the taskbar with your own bar, adds a Start menu with search, 15 desktop widgets, 35 themes with live wallpapers and a glass mode.">D4 заменяет панель задач своей панелью, добавляет меню «Пуск» с поиском, 15 виджетов на рабочий стол, 35 тем с живыми обоями и режим стекла.</p>
     <div class="cta">
       <a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download D4.exe">Скачать D4.exe</a>
       <a class="btn ghost" href="#demo" data-en="Try the demo">Попробовать демо</a>
@@ -328,13 +329,14 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
   <p class="sub" data-en="Not a skin: D4 is a real bar, Start menu and task view.">Это не «скин»: у D4 своя панель, своё меню «Пуск» и свой обзор задач.</p>
   <div class="grid g3">
     <div class="card hov reveal"><div class="ico">▭</div><h3 data-en="Bar with magnification">Панель с увеличением</h3><p data-en="Icons grow under the cursor, names show in tooltips, right-click ends a task. Explorer and Edge are pinned by default.">Значки растут под курсором, названия появляются в подсказках, правая кнопка завершает задачу. Проводник и Edge закреплены по умолчанию.</p><div class="minidock" id="miniDock"><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
-    <div class="card hov reveal"><div class="ico">❖</div><h3 data-en="14 widgets">14 виджетов</h3><p data-en="Clock, system monitor, weather, notes, music player, calendar, timer, calculator, AI assistant, currency rates, GitHub, Discord, checklist and text snippets.">Часы, монитор ресурсов, погода, заметки, музыкальный плеер, календарь, таймер, калькулятор, ИИ-помощник, курсы валют, GitHub, Discord, чек-лист и быстрые тексты.</p></div>
-    <div class="card hov reveal"><div class="ico">⌕</div><h3 data-en="Search">Поиск</h3><p data-en="Apps and files in one box. Finds text typed in the wrong layout («руддщ» → hello).">Программы и файлы в одной строке. Находит и текст в неверной раскладке («руддщ» → hello).</p></div>
+    <div class="card hov reveal"><div class="ico">❖</div><h3 data-en="15 widgets">15 виджетов</h3><p data-en="Clock, system monitor, weather, notes, music player, calendar, timer, calculator, AI assistant, clipboard history, currency rates, GitHub, Discord, checklist and text snippets.">Часы, монитор ресурсов, погода, заметки, музыкальный плеер, календарь, таймер, калькулятор, ИИ-помощник, история буфера, курсы валют, GitHub, Discord, чек-лист и быстрые тексты.</p></div>
+    <div class="card hov reveal"><div class="ico">⌕</div><h3 data-en="Search">Поиск</h3><p data-en="Apps and files in one box. Finds text typed in the wrong layout, calculates «2+2*3», converts units («5 km in mi»), shows recent files and runs lock, sleep, restart, shutdown.">Программы и файлы в одной строке. Находит текст в неверной раскладке, считает «2+2*3», переводит единицы («5 км в мили»), показывает недавние файлы и выполняет команды: блокировка, сон, перезагрузка, выключение.</p></div>
     <div class="card hov reveal"><div class="ico">▣</div><h3 data-en="Mini-folders">Мини-папки</h3><p data-en="Small floating folders with shortcuts, right on the desktop.">Небольшие плавающие папки с ярлыками прямо на рабочем столе.</p></div>
     <div class="card hov reveal"><div class="ico">❂</div><h3 data-en="Live wallpapers">Живые обои</h3><p data-en="Each theme has a vector scene and animated particles: snow, rain, fireflies, petals, aurora, lightning.">У каждой темы своя векторная сцена и анимированные частицы: снег, дождь, светлячки, лепестки, северное сияние, молнии.</p></div>
     <div class="card hov reveal"><div class="ico">◇</div><h3 data-en="Glass">Стекло</h3><p data-en="Optional acrylic glass for the bar, Start menu, widgets and flyouts. Toggle in settings.">Необязательное акриловое стекло для панели, «Пуска», виджетов и всплывающих окон. Включается в настройках.</p></div>
     <div class="card hov reveal"><div class="ico">⊞</div><h3 data-en="Task view and flyouts">Обзор задач и меню</h3><p data-en="Own task view with previews, real network and volume flyouts, a custom Start logo per theme.">Свой обзор задач с миниатюрами, настоящие меню сети и громкости, свой логотип «Пуска» у каждой темы.</p></div>
     <div class="card hov reveal"><div class="ico">◐</div><h3 data-en="Windows theming">Тема Windows</h3><p data-en="Optionally switches Windows accent and light/dark mode with the theme and restores it on exit.">По желанию меняет акцент и светлую/тёмную тему Windows вместе с темой D4 и возвращает при выходе.</p></div>
+    <div class="card hov reveal"><div class="ico">✓</div><h3 data-en="Small useful things">Полезные мелочи</h3><p data-en="Always-on-top for any window, hot corners, global hotkeys, keep-awake mode, battery saver for animations, a shutdown timer.">«Поверх всех окон» для любого окна, горячие углы, глобальные горячие клавиши, режим «не засыпать», экономия батареи для анимаций, таймер выключения.</p></div>
     <div class="card hov reveal"><div class="ico">↺</div><h3 data-en="Safe by design">Безопасно</h3><p data-en="On exit the taskbar and wallpaper are restored; a watcher process does it even after a crash.">При выходе возвращаются панель задач и обои; отдельный процесс-наблюдатель делает это даже после сбоя.</p></div>
   </div>
 </div></section>
@@ -345,7 +347,7 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
   <p class="sub" data-en="We publish no made-up benchmarks. D4 is a .NET 8 / WPF app, so measure it yourself in Task Manager.">Мы не выдумываем цифры. D4 — приложение на .NET 8 / WPF, так что замерьте его сами в диспетчере задач.</p>
   <div class="stats">
     <div class="card stat reveal"><b>35</b><span data-en="built-in themes">встроенных тем</span></div>
-    <div class="card stat reveal"><b>14</b><span data-en="desktop widgets">виджетов</span></div>
+    <div class="card stat reveal"><b>15</b><span data-en="desktop widgets">виджетов</span></div>
     <div class="card stat reveal"><b>30</b><span data-en="fps cap for particles">fps — предел частиц</span></div>
   </div>
   <div class="card reveal"><h3 data-en="Power saving">Экономия ресурсов</h3><ul><li data-en="Particles pause under a maximized window">Частицы останавливаются под развёрнутым окном</li><li data-en="The bar hides in fullscreen apps">Панель прячется в полноэкранных приложениях</li><li data-en="Glass is baked once, not redrawn each frame">Стекло запекается один раз, а не перерисовывается каждый кадр</li><li data-en="Widgets you don't enable are never created">Выключенные виджеты не создаются вообще</li></ul></div>
@@ -381,7 +383,7 @@ theme: ocean  @ 07:00</pre></div>
   <a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download D4.exe">Скачать D4.exe</a>
 </div></div></section>
 </main>
-<footer><div class="wrap"><span>© D4 · v1.4.0</span><span data-en="Made with .NET 8 and WPF · Contact: hello@example.com">Сделано на .NET 8 и WPF · Связь: hello@example.com</span></div></footer>
+<footer><div class="wrap"><span>© D4 · v1.7.0</span><span data-en="Made with .NET 8 and WPF · Contact: gfters222@gmail.com">Сделано на .NET 8 и WPF · Связь: gfters222@gmail.com</span></div></footer>
 <script>
 (function(){
 const THEMES=[

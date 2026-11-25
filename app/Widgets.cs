@@ -103,7 +103,7 @@ public abstract class WidgetWindow : Window
         Card.Dyn(Border.BackgroundProperty, "CardBrush");
     }
 
-    void SendBack()
+    public void SendBack()
     {
         if (hwnd != IntPtr.Zero) Native.SendToBottom(hwnd);
     }

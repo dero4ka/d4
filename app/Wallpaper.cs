@@ -51,6 +51,11 @@ public sealed class WallpaperService
                 CloseVideo();
                 ApplyStatic(exists && Array.IndexOf(ImageExt, ext) >= 0 ? path : null);
                 ParticleCanvas.Fps = s.AnimFps;
+                ParticleCanvas.BatterySaver = s.BatterySaver;
+                var cfg = AnimConfig.Load(s);
+                bool rebuild = cfg.Signature != ParticleCanvas.Cfg.Signature;
+                ParticleCanvas.Cfg = cfg;
+                if (rebuild) ParticleCanvas.Reload();
                 if (s.AnimatedWallpaper) EnsureParticles();
                 else CloseParticles();
             }
