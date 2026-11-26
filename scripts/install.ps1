@@ -73,7 +73,7 @@ Restore-Taskbar $Exe
 # 3. Сборка прямо в папку установки
 Write-Host "Собираю D4 (первый раз это занимает 1-2 минуты)..."
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-& dotnet publish $Proj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o $InstallDir
+& dotnet publish $Proj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true -o $InstallDir
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $Exe)) {
     Write-Host "Сборка не удалась. Скопируйте текст ошибки выше и пришлите его, исправим." -ForegroundColor Red
     exit 1

@@ -349,7 +349,23 @@ internal static class Native
         return sb.ToString();
     }
 
+    static readonly Dictionary<uint, (string Path, long Until)> exeCache = new();
+
+    /// <summary>Путь к exe по PID с кэшем на 30 с: список окон обновляется каждую секунду, и открывать процессы заново незачем.</summary>
     static string? ExeOfPid(uint pid)
+    {
+        long now = Environment.TickCount64;
+        if (exeCache.TryGetValue(pid, out var hit) && hit.Until > now) return hit.Path;
+        var path = ExeOfPidRaw(pid);
+        if (path != null)
+        {
+            if (exeCache.Count > 256) exeCache.Clear();
+            exeCache[pid] = (path, now + 30000);
+        }
+        return path;
+    }
+
+    static string? ExeOfPidRaw(uint pid)
     {
         var h = OpenProcess(0x1000, false, pid); // PROCESS_QUERY_LIMITED_INFORMATION
         if (h == IntPtr.Zero) return null;

@@ -64,6 +64,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .scene .sun{fill:var(--sun)}.scene .glow{fill:var(--sun);opacity:.25}
 .scene .star{fill:#fff;opacity:calc(var(--stars)*.8);animation:tw 3.2s ease-in-out infinite}
 .scene .star:nth-child(3n){animation-delay:-1s}.scene .star:nth-child(3n+1){animation-delay:-2.1s}
+/* оптимизация: в галерее звёзды статичны, секции ниже экрана не рисуются, пока не нужны */
+.shot .star{animation:none}
+.shot{content-visibility:auto;contain-intrinsic-size:auto 250px}
 @keyframes tw{50%{opacity:calc(var(--stars)*.25)}}
 .scene .ln{stroke:var(--accent2);fill:none;stroke-width:1.5;opacity:.7}
 .scene .bird{fill:none;stroke:var(--m3);stroke-width:2;stroke-linecap:round}
@@ -144,7 +147,7 @@ h2{font-size:clamp(28px,4.2vw,44px);line-height:1.15;margin-bottom:16px;letter-s
 .grid{display:grid;gap:20px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:28px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .3s,border-color .3s}
+.card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:28px;transition:transform .3s,border-color .3s}
 a.card:hover,.card.hov:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
 .card h3{font-size:20px;margin-bottom:8px}
 .card p,.card li{color:var(--muted)}
@@ -195,13 +198,12 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
 
 /* ===== motion layer ===== */
 .mesh{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
-.mesh i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;will-change:transform;animation:blob 26s ease-in-out infinite alternate}
-.mesh i:nth-child(1){width:46vw;height:46vw;left:-10vw;top:-12vw;background:var(--accent)}
-.mesh i:nth-child(2){width:40vw;height:40vw;right:-8vw;top:20vh;background:var(--accent2);animation-duration:32s;animation-delay:-8s}
-.mesh i:nth-child(3){width:36vw;height:36vw;left:25vw;bottom:-14vw;background:color-mix(in srgb,var(--accent) 50%,var(--accent2));animation-duration:38s;animation-delay:-15s}
+.mesh i{position:absolute;border-radius:50%;opacity:.42;will-change:transform;animation:blob 26s ease-in-out infinite alternate}
+.mesh i:nth-child(1){width:46vw;height:46vw;left:-10vw;top:-12vw;background:radial-gradient(circle,var(--accent),transparent 68%)}
+.mesh i:nth-child(2){width:40vw;height:40vw;right:-8vw;top:20vh;background:radial-gradient(circle,var(--accent2),transparent 68%);animation-duration:32s;animation-delay:-8s}
+.mesh i:nth-child(3){width:36vw;height:36vw;left:25vw;bottom:-14vw;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 50%,var(--accent2)),transparent 68%);animation-duration:38s;animation-delay:-15s}
 @keyframes blob{0%{transform:translate(0,0) scale(1)}50%{transform:translate(8vw,6vh) scale(1.2)}100%{transform:translate(-6vw,10vh) scale(.9)}}
-.grain{position:fixed;inset:-50%;z-index:60;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");animation:grain 1.2s steps(6) infinite}
-@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-2%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+.grain{position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.06;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
 .progress{position:fixed;left:0;top:0;height:3px;width:100%;z-index:70;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--accent),var(--accent2))}
 .glow{position:fixed;left:0;top:0;width:420px;height:420px;margin:-210px 0 0 -210px;border-radius:50%;z-index:-1;pointer-events:none;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 30%,transparent),transparent 65%);opacity:0;transition:opacity .4s;will-change:transform}
 body.moving .glow{opacity:1}
@@ -216,8 +218,7 @@ h1>.w{background:none;-webkit-background-clip:border-box;background-clip:border-
 h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
 .lt h1 span .w{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text}
 /* blur reveal */
-.reveal{filter:blur(10px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1),filter .9s}
-.reveal.in{filter:blur(0)}
+.reveal{transition:opacity .8s,transform .8s cubic-bezier(.2,.7,.2,1)}
 /* spotlight cards */
 .card{position:relative;overflow:hidden}
 .card::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--accent) 22%,transparent),transparent 65%)}
@@ -245,7 +246,7 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
 .nav,.badge,.btn.ghost{box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(255,255,255,.05)}
 .desk{perspective:1200px}
 .shot{perspective:800px}
-@media(prefers-reduced-motion:reduce){.mesh i,.grain,.marquee .track,.btn.primary::after{animation:none!important}.w{opacity:1;filter:none;transform:none;animation:none}.reveal{filter:none}}
+@media(prefers-reduced-motion:reduce){.mesh i,.grain,.marquee .track,.btn.primary::after{animation:none!important}.w{opacity:1;filter:none;transform:none;animation:none}}
 @media(max-width:820px){.nav ul{display:none}.nav .lang{margin-left:auto}.hero{padding-top:130px}.w-weather,.w-todo{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
@@ -263,7 +264,7 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
 <div class="hero" id="home">
   <div class="hero-bg scene"><svg id="heroScene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice"></svg><canvas id="fx"></canvas></div>
   <div class="wrap">
-    <div class="badge"><i></i><span data-en="Version 1.7.0 · Windows 10/11">Версия 1.7.0 · Windows 10/11</span></div>
+    <div class="badge"><i></i><span data-en="Version 1.8.0 · Windows 10/11">Версия 1.8.0 · Windows 10/11</span></div>
     <h1 data-en="Windows desktop, <span>built around you</span>">Рабочий стол Windows, <span>собранный под вас</span></h1>
     <p class="lead" data-en="D4 replaces the taskbar with your own bar, adds a Start menu with search, 15 desktop widgets, 35 themes with live wallpapers and a glass mode.">D4 заменяет панель задач своей панелью, добавляет меню «Пуск» с поиском, 15 виджетов на рабочий стол, 35 тем с живыми обоями и режим стекла.</p>
     <div class="cta">
@@ -383,7 +384,7 @@ theme: ocean  @ 07:00</pre></div>
   <a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download D4.exe">Скачать D4.exe</a>
 </div></div></section>
 </main>
-<footer><div class="wrap"><span>© D4 · v1.7.0</span><span data-en="Made with .NET 8 and WPF · Contact: gfters222@gmail.com">Сделано на .NET 8 и WPF · Связь: gfters222@gmail.com</span></div></footer>
+<footer><div class="wrap"><span>© D4 · v1.8.0</span><span data-en="Made with .NET 8 and WPF · Contact: hello@example.com">Сделано на .NET 8 и WPF · Связь: hello@example.com</span></div></footer>
 <script>
 (function(){
 const THEMES=[
@@ -425,9 +426,9 @@ const THEMES=[
 let lang="ru",theme="ocean";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function rnd(i){const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
-function scene(svg,id){
+function scene(svg,id,n){
   let h='';
-  for(let i=0;i<46;i++)h+=`<circle class="star" cx="${rnd(i)*1200}" cy="${rnd(i+99)*320}" r="${.6+rnd(i+7)*1.6}"/>`;
+  for(let i=0;i<(n||46);i++)h+=`<circle class="star" cx="${rnd(i)*1200}" cy="${rnd(i+99)*320}" r="${.6+rnd(i+7)*1.6}"/>`;
   h+=`<circle class="glow" cx="860" cy="250" r="120"/><circle class="sun" cx="860" cy="250" r="54"/>`;
   if(id=="aurora")h+=`<path class="rib acc" opacity=".35" d="M0 200 C300 80 500 300 800 160 S1100 120 1200 200 V0 H0Z"/><path class="rib acc2" opacity=".3" d="M0 240 C300 140 600 330 900 200 S1150 180 1200 240 V0 H0Z"/>`;
   h+=`<path class="m1" d="M0 470 L130 330 L250 430 L400 270 L560 440 L700 340 L860 450 L1010 320 L1200 450 V700 H0Z"/>`;
@@ -454,12 +455,15 @@ function setTheme(id){
   $$(".chip[data-t]").forEach(c=>c.classList.toggle("on",c.dataset.t==id));
   mode=t[3];parts=[];
 }
+// сцены галереи рисуются только когда карточка подъезжает к экрану (35 сцен × десятки звёзд — это сотни узлов)
+const lazyScene=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;lazyScene.unobserve(e.target);
+  const b=e.target;scene(b.querySelector("svg"),b.dataset.id,10)}),{rootMargin:"400px"});
 function buildGallery(){
   const g=$("#gallery");g.innerHTML="";
   THEMES.forEach(t=>{
     const b=document.createElement("button");b.className="shot";b.dataset.id=t[0];
     b.innerHTML=`<div class="scene" data-theme="${t[0]}"><svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice"></svg></div><em>${lang=="en"?t[2]:t[1]}<small>${lang=="en"?t[5]:t[4]}</small></em>`;
-    scene(b.querySelector("svg"),t[0]);b.onclick=()=>setTheme(t[0]);g.appendChild(b);
+    b.onclick=()=>setTheme(t[0]);g.appendChild(b);lazyScene.observe(b);
   });
   setTheme(theme);
 }

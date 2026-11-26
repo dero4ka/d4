@@ -51,6 +51,7 @@ public sealed class ParticleWindow : Window
                 var c = ParticleCanvas.Cfg;
                 bool paused = (c.PauseMaximized && Native.IsForegroundCovering())
                            || (c.PauseFullscreen && Native.IsForegroundFullscreen())
+                           || SessionLocked
                            || (ParticleCanvas.BatterySaver && OnBattery())
                            || (c.PauseCpu && Native.CpuUsageAnim() > c.CpuLimit);
                 bool off = c.Schedule && !AnimConfig.InSchedule(c.From, c.To);
@@ -67,6 +68,22 @@ public sealed class ParticleWindow : Window
             guard.Stop();
             canvas.Stop();
         };
+    }
+
+    /// <summary>Экран заблокирован (Win+L) — рисовать нечего.</summary>
+    static volatile bool SessionLocked;
+
+    static ParticleWindow()
+    {
+        try
+        {
+            Microsoft.Win32.SystemEvents.SessionSwitch += (_, e) =>
+            {
+                if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock) SessionLocked = true;
+                else if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionUnlock) SessionLocked = false;
+            };
+        }
+        catch { }
     }
 
     static bool OnBattery()
@@ -530,6 +547,53 @@ internal sealed class ParticleCanvas : FrameworkElement
         return core;
     }
 
+    static readonly Dictionary<(Color, int, int), Brush> FadeBrushes = new();
+    static readonly Dictionary<(Color, int), Pen> EdgePens = new();
+
+    /// <summary>Вертикальный градиент "цвет → прозрачный" (mid != 0 — трёхточечный как у сияния). Кэшируется, создаётся один раз.</summary>
+    static Brush FadeBrush(Color c, int a, int mid)
+    {
+        var key = (c, a, mid);
+        if (FadeBrushes.TryGetValue(key, out var b)) return b;
+        var g = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
+        if (mid > 0)
+        {
+            g.GradientStops.Add(new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 0));
+            g.GradientStops.Add(new GradientStop(Color.FromArgb((byte)mid, c.R, c.G, c.B), .35));
+            g.GradientStops.Add(new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 1));
+        }
+        else
+        {
+            g.GradientStops.Add(new GradientStop(Color.FromArgb((byte)a, c.R, c.G, c.B), 0));
+            g.GradientStops.Add(new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 1));
+        }
+        g.Freeze();
+        FadeBrushes[key] = g;
+        return g;
+    }
+
+    static Pen EdgePen(int a)
+    {
+        var key = (Colors.White, a);
+        if (EdgePens.TryGetValue(key, out var p)) return p;
+        p = new Pen(new SolidColorBrush(Color.FromArgb((byte)a, 255, 255, 255)), 1.2);
+        p.Freeze();
+        EdgePens[key] = p;
+        return p;
+    }
+
+    /// <summary>Одна замороженная матрица вместо трёх Transform-объектов на частицу.</summary>
+    static Transform Xf(double x, double y, double angle, double sx, double sy)
+    {
+        var m = Matrix.Identity;
+        m.Scale(sx, sy);
+        if (angle != 0) m.Rotate(angle);
+        m.Translate(x, y);
+        var t = new MatrixTransform(m);
+        t.Freeze();
+        return t;
+    }
+
     static Geometry Sparkle()
     {
         if (sparkle != null) return sparkle;
@@ -617,7 +681,7 @@ internal sealed class ParticleCanvas : FrameworkElement
             double baseY = h * (.18 + r * .07);
             double amp = h * (.05 + r * .015);
             double thick = h * (.2 + r * .04);
-            const int steps = 40;
+            const int steps = 28;
 
             var geo = new StreamGeometry();
             using (var ctx = geo.Open())
@@ -639,11 +703,7 @@ internal sealed class ParticleCanvas : FrameworkElement
             }
             geo.Freeze();
 
-            var brush = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
-            brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 0));
-            brush.GradientStops.Add(new GradientStop(Color.FromArgb(120, c.R, c.G, c.B), .35));
-            brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 1));
-            brush.Freeze();
+            var brush = FadeBrush(c, 0, 120);
 
             dc.PushOpacity(.55 + .35 * Math.Sin(now * .5 + r * 1.7));
             dc.DrawGeometry(brush, null, geo);
@@ -809,12 +869,11 @@ internal sealed class ParticleCanvas : FrameworkElement
                     double flap = .5 + .5 * Math.Sin(now * 7 * (.8 + p.Size * .15) + p.Phase * 9);
                     double s = p.Size * 5.5, wy = s * (.25 + .85 * flap);
                     dc.PushOpacity(l.Alpha);
-                    dc.PushTransform(new TranslateTransform(p.X, p.Y));
-                    dc.PushTransform(new RotateTransform(ang));
+                    dc.PushTransform(Xf(p.X, p.Y, ang, 1, 1));
                     var pen = RainPen(c0, 1.7);
                     dc.DrawLine(pen, new Point(0, 0), new Point(-s, -wy));
                     dc.DrawLine(pen, new Point(0, 0), new Point(-s, wy));
-                    dc.Pop(); dc.Pop(); dc.Pop();
+                    dc.Pop(); dc.Pop();
                 }
                 break;
 
@@ -823,7 +882,7 @@ internal sealed class ParticleCanvas : FrameworkElement
                 {
                     var c = l.Colors[r % l.Colors.Length];
                     double baseY = h * (.76 + r * .07), amp = h * (.012 + r * .006);
-                    const int steps = 56;
+                    const int steps = 40;
                     var geo = new StreamGeometry();
                     using (var ctx = geo.Open())
                     {
@@ -837,11 +896,7 @@ internal sealed class ParticleCanvas : FrameworkElement
                         ctx.LineTo(new Point(0, h), true, false);
                     }
                     geo.Freeze();
-                    var brush = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
-                    brush.GradientStops.Add(new GradientStop(Color.FromArgb((byte)(90 - r * 14), c.R, c.G, c.B), 0));
-                    brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 1));
-                    brush.Freeze();
-                    dc.DrawGeometry(brush, new Pen(new SolidColorBrush(Color.FromArgb((byte)(110 - r * 25), 255, 255, 255)), 1.2), geo);
+                    dc.DrawGeometry(FadeBrush(c, 90 - r * 14, 0), EdgePen(110 - r * 25), geo);
                 }
                 break;
 
@@ -938,10 +993,7 @@ internal sealed class ParticleCanvas : FrameworkElement
     {
         // косые столбы света сверху, медленно покачиваются и мерцают
         var c = l.Colors[0];
-        var brush = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
-        brush.GradientStops.Add(new GradientStop(Color.FromArgb(90, c.R, c.G, c.B), 0));
-        brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, c.R, c.G, c.B), 1));
-        brush.Freeze();
+        var brush = FadeBrush(c, 90, 0);
         for (int i = 0; i < 5; i++)
         {
             double x0 = w * (.08 + i * .21) + Math.Sin(now * .18 + i * 1.7) * 50;
@@ -1034,22 +1086,18 @@ internal sealed class ParticleCanvas : FrameworkElement
                 if (l.Mode == "petal")
                 {
                     dc.PushOpacity(Math.Min(1, a));
-                    dc.PushTransform(new TranslateTransform(p.X, p.Y));
-                    dc.PushTransform(new RotateTransform(now * 40 * p.Speed + p.Phase * 57));
-                    dc.PushTransform(new ScaleTransform(p.Size, p.Size * (.55 + .45 * Math.Abs(Math.Sin(now * p.Speed + p.Phase)))));
+                    dc.PushTransform(Xf(p.X, p.Y, now * 40 * p.Speed + p.Phase * 57, p.Size, p.Size * (.55 + .45 * Math.Abs(Math.Sin(now * p.Speed + p.Phase)))));
                     dc.DrawGeometry(CoreBrush(color), null, Petal());
-                    dc.Pop(); dc.Pop(); dc.Pop(); dc.Pop();
+                    dc.Pop(); dc.Pop();
                     continue;
                 }
 
                 dc.PushOpacity(Math.Min(1, a));
                 if (l.Mode == "spark")
                 {
-                    dc.PushTransform(new TranslateTransform(p.X, p.Y));
-                    dc.PushTransform(new RotateTransform(Math.Sin(now * .3 + p.Phase) * 25));
-                    dc.PushTransform(new ScaleTransform(p.Size * 1.4, p.Size * 1.4));
+                    dc.PushTransform(Xf(p.X, p.Y, Math.Sin(now * .3 + p.Phase) * 25, p.Size * 1.4, p.Size * 1.4));
                     dc.DrawGeometry(CoreBrush(color), null, Sparkle());
-                    dc.Pop(); dc.Pop(); dc.Pop();
+                    dc.Pop();
                     double gr = p.Size * l.Glow * 2;
                     dc.DrawEllipse(GlowBrush(color), null, new Point(p.X, p.Y), gr, gr);
                 }

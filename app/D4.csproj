@@ -12,7 +12,11 @@
     <RootNamespace>D4</RootNamespace>
     <StartupObject>D4.Program</StartupObject>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <Version>1.7.0</Version>
+    <Version>1.8.0</Version>
+    <ServerGarbageCollector>false</ServerGarbageCollector>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <DebugType>none</DebugType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
