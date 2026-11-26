@@ -249,6 +249,65 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
 @media(prefers-reduced-motion:reduce){.mesh i,.grain,.marquee .track,.btn.primary::after{animation:none!important}.w{opacity:1;filter:none;transform:none;animation:none}}
 @media(max-width:820px){.nav ul{display:none}.nav .lang{margin-left:auto}.hero{padding-top:130px}.w-weather,.w-todo{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+
+/* ===== scroll-story pack (v1.9) ===== */
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+.sx{transform-origin:50% 100%;will-change:transform}
+.hero h1,.hero .lead,.hero .cta,.hero .badge{will-change:transform,opacity}
+/* mask headings */
+.mk{clip-path:inset(-12% 100% -12% 0);transform:translateX(-18px);transition:clip-path 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+.mk.in{clip-path:inset(-12% -2% -12% 0);transform:none}
+/* conic border on hover */
+.card.hov:hover{border-color:transparent}
+.card.hov>.ring{display:none}
+@supports (background:conic-gradient(from var(--ang),red,blue)){
+.card.hov::after{padding:1.5px;opacity:0;background:conic-gradient(from var(--ang),var(--accent),var(--accent2),transparent 40%,var(--accent));animation:spin 3.2s linear infinite;animation-play-state:paused}
+.card.hov:hover::after{opacity:1;animation-play-state:running}}
+@keyframes spin{to{--ang:360deg}}
+/* manifesto: words light up with scroll */
+.mani{padding:120px 0}
+.mani p{font-size:clamp(26px,4.6vw,54px);line-height:1.22;font-weight:700;letter-spacing:-.8px;max-width:1000px}
+.mani .sw{opacity:.16;transition:opacity .25s,filter .25s;filter:blur(1.5px)}
+.mani .sw.on{opacity:1;filter:none}
+.mani .sw.hl.on{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* pinned story */
+.story{height:440vh;padding:0;position:relative}
+.story .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;overflow:hidden}
+.sgrid{display:grid;grid-template-columns:minmax(260px,.8fr) 1.5fr;gap:48px;align-items:center;width:100%}
+.steps{list-style:none;position:relative;padding-left:26px;margin-top:18px}
+.steps::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--card-b)}
+.steps .bar{position:absolute;left:5px;top:6px;width:2px;height:calc(100% - 12px);background:linear-gradient(var(--accent),var(--accent2));transform-origin:top;transform:scaleY(0)}
+.steps li{padding:12px 0;opacity:.32;transition:opacity .4s,transform .4s}
+.steps li.on{opacity:1;transform:translateX(6px)}
+.steps li::before{content:"";position:absolute;left:0;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--card-b);margin-top:7px;transition:.3s}
+.steps li.on::before{border-color:var(--accent);background:var(--accent);box-shadow:0 0 14px var(--accent)}
+.steps h3{font-size:22px;margin-bottom:4px}.steps p{color:var(--muted);font-size:15px}
+.sdesk{transform-style:preserve-3d;will-change:transform}
+.sdesk .sl{position:absolute;inset:0;opacity:0}
+.sdesk .sl svg{position:absolute;inset:0;width:100%;height:100%}
+.sdesk .win,.sdesk .dock,.sdesk .topbar{will-change:transform,opacity}
+.sdesk .cap{position:absolute;right:3%;bottom:16%;z-index:6;font-size:clamp(10px,1.4vw,14px);padding:6px 12px;border-radius:999px;background:var(--win);border:1px solid rgba(255,255,255,.2);opacity:0}
+/* horizontal widgets */
+.hs{position:relative;padding:0}
+.hs .pin{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.hs .head{padding-bottom:26px}
+.hs .row{display:flex;gap:22px;padding:10px 22px 24px max(22px,calc((100vw - 1076px)/2));width:max-content;will-change:transform;perspective:1200px}
+.wc{flex:0 0 284px;min-height:290px;border-radius:26px;padding:26px;position:relative;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 16%,var(--card)),var(--card));border:1px solid var(--card-b);transform-style:preserve-3d;will-change:transform,opacity;display:flex;flex-direction:column}
+.wc .n{position:absolute;right:18px;top:6px;font-size:84px;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--text) 22%,transparent);letter-spacing:-3px}
+.wc .g{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:26px;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 12px 28px color-mix(in srgb,var(--accent) 35%,transparent);margin-bottom:auto}
+.wc h3{font-size:22px;margin:56px 0 6px}.wc p{color:var(--muted);font-size:15px}
+.wc .live{font-variant-numeric:tabular-nums;font-size:26px;font-weight:300;margin-top:10px;color:var(--accent)}
+.hs .rail{height:3px;border-radius:3px;background:var(--card-b);margin:0 22px;max-width:1076px;position:relative;left:max(0px,calc((100vw - 1120px)/2))}
+.hs .rail i{position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transform-origin:left;transform:scaleX(0)}
+@media(max-width:820px){.story{height:380vh}.sgrid{grid-template-columns:1fr;gap:18px}.steps li{padding:6px 0}.steps p{font-size:13px}.sdesk{width:100%;max-width:560px;margin:0 auto}}
+.hs.native .pin{position:static;height:auto;overflow:visible;padding:70px 0}.hs.native .row{width:auto;overflow-x:auto;scroll-snap-type:x mandatory;padding-left:22px;transform:none!important}.hs.native .wc{scroll-snap-align:center;transform:none!important;opacity:1!important}.hs.native .rail{display:none}
+/* custom cursor */
+.cur{position:fixed;left:0;top:0;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:1.5px solid var(--accent);z-index:80;pointer-events:none;opacity:0;transition:width .25s,height .25s,margin .25s,background .25s,opacity .3s;will-change:transform}
+.cur.on{opacity:.9}
+.cur.big{width:68px;height:68px;margin:-34px 0 0 -34px;background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.cur i{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:var(--accent2)}
+@media(hover:none),(pointer:coarse){.cur{display:none}}
+@media(prefers-reduced-motion:reduce){.mk{clip-path:none;transform:none}.mani .sw{opacity:1;filter:none}.cur{display:none}}
 </style>
 </head>
 <body data-theme="ocean">
@@ -271,14 +330,14 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
       <a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download D4.exe">Скачать D4.exe</a>
       <a class="btn ghost" href="#demo" data-en="Try the demo">Попробовать демо</a>
     </div>
-    <div class="splash reveal">
+    <div class="splash reveal"><div class="sx" id="sx">
       <div class="desk scene tilt" id="heroDesk"><svg id="deskScene" viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice"></svg>
         <div class="topbar"><span><b>D4</b><span data-en="Taskbar · Search · Widgets">Панель · Поиск · Виджеты</span></span><span id="clk">12:00</span></div>
         <div class="win w-clock"><small data-en="Clock">Часы</small><b id="hc">12:00</b></div>
         <div class="win w-pomo"><small data-en="Timer">Таймер</small><b id="pm">25:00</b></div>
         <div class="dock" id="heroDock"><span></span><span></span><span></span><span></span><span></span><span></span></div>
       </div>
-    </div>
+    </div></div>
   </div>
 </div>
 
@@ -290,6 +349,43 @@ h1 span .w{background:linear-gradient(90deg,#fff,var(--accent2));-webkit-backgro
     <p data-en="D4 is a single exe file from GitHub Releases. It needs administrator rights (for full file search and hiding the system taskbar). You can undo everything with uninstall.bat.">D4 — один exe-файл из GitHub Releases. Нужны права администратора (для полного поиска по файлам и скрытия системной панели). Всё откатывается через uninstall.bat.</p></div>
     <div class="cta"><a class="btn primary" href="https://github.com/dero4ka/d4/releases/latest/download/D4.exe" data-en="Download">Скачать</a><a class="btn ghost" href="https://github.com/dero4ka/d4" data-en="Source code">Исходный код</a></div>
   </div>
+</div></section>
+
+
+<section class="mani"><div class="wrap">
+  <div class="eyebrow mk" data-en="In a nutshell">Коротко</div>
+  <p id="mani" data-t-ru="D4 заменяет панель задач своей панелью, добавляет «Пуск» с поиском, 15 виджетов, 35 тем и живые обои. Всё настраивается, а при выходе система возвращается в исходное состояние." data-t-en="D4 replaces the taskbar with your own bar, adds a Start menu with search, 15 widgets, 35 themes and live wallpapers. Everything is configurable, and on exit the system goes back to how it was." data-hl-ru="15 виджетов|35 тем|живые обои" data-hl-en="15 widgets|35 themes|live wallpapers"></p>
+</div></section>
+
+<section class="story" id="story"><div class="pin"><div class="wrap sgrid">
+  <div>
+    <div class="eyebrow" data-en="Scroll to see">Листайте — смотрите</div>
+    <h2 data-en="One desktop, four layers" class="mk">Один рабочий стол — четыре слоя</h2>
+    <ol class="steps" id="steps"><div class="bar" id="sbar"></div>
+      <li><h3 data-en="Your own bar">Своя панель</h3><p data-en="The bar with magnifying icons replaces the system taskbar.">Панель со значками, которые растут под курсором, вместо панели задач.</p></li>
+      <li><h3 data-en="Widgets">Виджеты</h3><p data-en="15 widgets live right on the desktop.">15 виджетов лежат прямо на рабочем столе.</p></li>
+      <li><h3 data-en="Glass">Стекло</h3><p data-en="Optional glass for the bar, widgets and menus.">Необязательное стекло для панели, виджетов и меню.</p></li>
+      <li><h3 data-en="35 themes">35 тем</h3><p data-en="Colors and scenes change together with the theme.">Вместе с темой меняются цвета и пейзаж.</p></li>
+    </ol>
+  </div>
+  <div class="desk scene sdesk" id="sDesk" data-theme="ocean">
+    <div class="sl scene" data-theme="ocean"><svg viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice"></svg></div>
+    <div class="sl scene" data-theme="sunset"><svg viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice"></svg></div>
+    <div class="sl scene" data-theme="forest"><svg viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice"></svg></div>
+    <div class="sl scene" data-theme="neon"><svg viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice"></svg></div>
+    <div class="topbar"><span><b>D4</b><span data-en="Taskbar · Search · Widgets">Панель · Поиск · Виджеты</span></span><span id="clk3">12:00</span></div>
+    <div class="win w-clock"><small data-en="Clock">Часы</small><b id="hc3">12:00</b></div>
+    <div class="win w-weather"><small data-en="Weather">Погода</small><b>+18°</b></div>
+    <div class="win w-pomo"><small data-en="Timer">Таймер</small><b>25:00</b></div>
+    <div class="dock"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="cap" id="scap"></div>
+  </div>
+</div></div></section>
+
+<section class="hs" id="hs"><div class="pin">
+  <div class="wrap head"><div class="eyebrow" data-en="Widgets">Виджеты</div><h2 class="mk" data-en="15 widgets — scroll sideways">15 виджетов — листайте вбок</h2></div>
+  <div class="row" id="hrow"><div class="wc"><span class="n">01</span><div class="g">◷</div><h3 data-en="Clock">Часы</h3><p data-en="Large clock and date right on the desktop.">Крупные часы и дата прямо на рабочем столе.</p><div class="live" data-live="time"></div></div><div class="wc"><span class="n">02</span><div class="g">▤</div><h3 data-en="System monitor">Монитор системы</h3><p data-en="CPU, memory and disk load.">Загрузка процессора, памяти и дисков.</p></div><div class="wc"><span class="n">03</span><div class="g">☁</div><h3 data-en="Weather">Погода</h3><p data-en="Forecast for your city (Open-Meteo).">Прогноз по вашему городу (Open-Meteo).</p></div><div class="wc"><span class="n">04</span><div class="g">✎</div><h3 data-en="Notes">Заметки</h3><p data-en="Quick notes that are always at hand.">Быстрые заметки, которые всегда под рукой.</p></div><div class="wc"><span class="n">05</span><div class="g">♫</div><h3 data-en="Music">Музыка</h3><p data-en="Track info and playback control for any player.">Трек и управление воспроизведением из любого плеера.</p></div><div class="wc"><span class="n">06</span><div class="g">▦</div><h3 data-en="Calendar">Календарь</h3><p data-en="The month is picked from the current date.">Месяц определяется автоматически по дате.</p></div><div class="wc"><span class="n">07</span><div class="g">⏱</div><h3 data-en="Timer">Таймер</h3><p data-en="Any time you type in.">Любое время, которое вы впишете сами.</p><div class="live" data-live="timer"></div></div><div class="wc"><span class="n">08</span><div class="g">＋</div><h3 data-en="Calculator">Калькулятор</h3><p data-en="A simple calculator on the desktop.">Простой калькулятор прямо на столе.</p></div><div class="wc"><span class="n">09</span><div class="g">✦</div><h3 data-en="AI assistant">ИИ-помощник</h3><p data-en="Chat with a free model or your own key.">Чат с бесплатной моделью или вашим ключом.</p></div><div class="wc"><span class="n">10</span><div class="g">⎘</div><h3 data-en="Clipboard">Буфер обмена</h3><p data-en="History of copied items while D4 runs.">История скопированного, пока D4 запущен.</p></div><div class="wc"><span class="n">11</span><div class="g">₽</div><h3 data-en="Currency">Курсы валют</h3><p data-en="Rates for the currencies you pick.">Курсы выбранных валют.</p></div><div class="wc"><span class="n">12</span><div class="g">⌥</div><h3 data-en="GitHub">GitHub</h3><p data-en="Stats of a repository you choose.">Данные репозитория, который вы укажете.</p></div><div class="wc"><span class="n">13</span><div class="g">◉</div><h3 data-en="Discord">Discord</h3><p data-en="Who is online on your server.">Кто онлайн на вашем сервере.</p></div><div class="wc"><span class="n">14</span><div class="g">✓</div><h3 data-en="Checklist">Чек-лист</h3><p data-en="A to-do list with checkboxes.">Список дел с галочками.</p></div><div class="wc"><span class="n">15</span><div class="g">❝</div><h3 data-en="Snippets">Сниппеты</h3><p data-en="Ready phrases in one click.">Готовые фразы в один клик.</p></div></div>
+  <div class="rail"><i id="hrail"></i></div>
 </div></section>
 
 <section style="padding-top:20px"><div class="wrap"><div class="grid g3">
@@ -436,6 +532,7 @@ function scene(svg,id,n){
   h+=`<path class="m3" d="M0 620 L200 530 L380 610 L600 510 L800 620 L1000 540 L1200 620 V700 H0Z"/>`;
   svg.innerHTML=h;
 }
+window.__scene=scene;
 function applyLang(){
   $$("[data-en]").forEach(e=>{if(e.dataset.ru==null)e.dataset.ru=e.innerHTML;e.innerHTML=lang=="en"?e.dataset.en:e.dataset.ru});
   $$("[data-enph]").forEach(e=>{if(e.dataset.ruph==null)e.dataset.ruph=e.placeholder;e.placeholder=lang=="en"?e.dataset.enph:e.dataset.ruph});
@@ -604,6 +701,127 @@ const cio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)retur
   const el=e.target,to=+el.dataset.to;if(reduce){el.textContent=to;return}
   const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/1400),v=Math.round(to*(1-Math.pow(1-k,3)));el.textContent=v;if(k<1)requestAnimationFrame(f)})(t0)}),{threshold:.6});
 $$(".stat b").forEach(b=>{b.dataset.to=b.textContent.trim();b.textContent="0";cio.observe(b)});
+})();
+</script>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+const fine=matchMedia("(hover:hover) and (pointer:fine)").matches;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),lerp=(a,b,t)=>a+(b-a)*t;
+const L=()=>document.documentElement.lang=="en"?"en":"ru";
+// --- манифест: слова загораются по мере прокрутки
+const mani=$("#mani");let words=[];
+function buildMani(){
+  if(!mani)return;const l=L(),t=mani.dataset["t"+l[0].toUpperCase()+l[1]]||mani.dataset.tRu;
+  const hl=(mani.dataset["hl"+l[0].toUpperCase()+l[1]]||"").split("|");
+  mani.innerHTML="";let i=0,mark=null;
+  // подсветка фраз целиком: ищем их границы в тексте
+  const spans=[];hl.forEach(h=>{const k=t.indexOf(h);if(k>=0)spans.push([k,k+h.length])});
+  let pos=0;t.split(/(\s+)/).forEach(w=>{if(!w)return;
+    if(/^\s+$/.test(w)){mani.append(" ");pos+=w.length;return}
+    const e=document.createElement("span");e.className="sw"+(spans.some(r=>pos>=r[0]&&pos<r[1])?" hl":"");e.textContent=w;mani.append(e);pos+=w.length});
+  words=[...mani.children];
+}
+// --- закреплённая история
+const story=$("#story"),sDesk=$("#sDesk");
+const sl=story?$$("#sDesk .sl"):[];
+const steps=$$("#steps li"),sbar=$("#sbar"),scap=$("#scap");
+const sW=sDesk?[...sDesk.querySelectorAll(".win")]:[],sTop=sDesk&&sDesk.querySelector(".topbar"),sDock=sDesk&&sDesk.querySelector(".dock");
+const THEMES_S=["ocean","sunset","forest","neon"],NAMES={ocean:["Океан","Ocean"],sunset:["Закат","Sunset"],forest:["Лес","Forest"],neon:["Неон","Neon"]};
+let stepNow=-1,themeNow="";
+// --- горизонтальная лента
+const hs=$("#hs"),hrow=$("#hrow"),hrail=$("#hrail"),wcs=$$(".wc");
+function sizeHS(){
+  if(!hs)return;
+  if(innerWidth<820||reduce){hs.style.height="";hs.classList.add("native");return}
+  hs.classList.remove("native");
+  hs.style.height=(hrow.scrollWidth-innerWidth+innerHeight+120)+"px";
+}
+// --- hero
+const sx=$("#sx"),heroEls=$$(".hero .badge,.hero h1,.hero .lead,.hero .cta"),heroBg=$(".hero-bg"),hero=$("#home");
+const mesh=$(".mesh");
+let ticking=false;
+function pr(el){const r=el.getBoundingClientRect();return {r,p:clamp(-r.top/Math.max(1,r.height-innerHeight),0,1)}}
+function update(){
+  ticking=false;if(reduce)return;
+  const vh=innerHeight,y=scrollY;
+  // hero: стол «ложится» и приближается, текст уезжает вверх
+  if(y<vh*1.4){
+    const p=clamp(y/(vh*.9),0,1);
+    if(sx)sx.style.transform="perspective(1400px) rotateX("+(16*(1-Math.min(1,p*2.2)))+"deg) translateY("+(-p*50)+"px) scale("+(.9+.1*Math.min(1,p*1.6))+")";
+    heroEls.forEach((e,i)=>{e.style.transform="translateY("+(-p*(30+i*14))+"px)";e.style.opacity=clamp(1-p*1.15,0,1)});
+    if(heroBg)heroBg.style.transform="translateY("+(y*.25)+"px) scale("+(1+p*.05)+")";
+  }
+  if(mesh&&fine===false)mesh.style.transform="translateY("+(y*-.05)+"px)";
+  // манифест
+  if(mani&&words.length){const r=mani.getBoundingClientRect();
+    if(r.bottom>0&&r.top<vh){const p=clamp((vh*.85-r.top)/(vh*.55+r.height*.6),0,1),n=Math.round(p*words.length);
+      for(let i=0;i<words.length;i++){const on=i<n;if(words[i]._o!==on){words[i]._o=on;words[i].classList.toggle("on",on)}}}}
+  // история
+  if(story){const {r,p}=pr(story);
+    if(r.top<vh&&r.bottom>0){
+      const st=Math.min(3,Math.floor(p*4));
+      if(st!==stepNow){stepNow=st;steps.forEach((e,i)=>e.classList.toggle("on",i==st))}
+      sbar.style.transform="scaleY("+p+")";
+      const a=clamp(p/.22,0,1);                            // панель
+      sTop.style.opacity=a;sTop.style.transform="translateY("+((1-a)*-30)+"px)";
+      sDock.style.opacity=a;sDock.style.transform="translateX(-50%) translateY("+((1-a)*40)+"px)";
+      sW.forEach((w,i)=>{const b=clamp((p-.2-i*.045)/.14,0,1);w.style.opacity=b;w.style.transform="translateY("+((1-b)*34)+"px) scale("+(.92+.08*b)+")"});
+      sDesk.classList.toggle("glass",p>.5);
+      const f=clamp((p-.55)/.45,0,1)*3;                    // смена тем
+      sl.forEach((e,i)=>{e.style.opacity=clamp(1-Math.abs(f-i),0,1)});
+      const th=THEMES_S[Math.round(f)];
+      if(th!==themeNow){themeNow=th;sDesk.dataset.theme=th;scap.textContent=NAMES[th][L()=="en"?1:0]}
+      scap.style.opacity=clamp((p-.55)/.1,0,1);
+      sDesk.style.transform="perspective(1400px) rotateY("+(-12+12*clamp(p*2.5,0,1))+"deg) rotateX("+(6-6*clamp(p*2.5,0,1))+"deg) scale("+(.92+.08*clamp(p*3,0,1))+")";
+    }}
+  // горизонтальная лента
+  if(hs&&!hs.classList.contains("native")){const {r,p}=pr(hs);
+    if(r.top<vh&&r.bottom>0){
+      const max=hrow.scrollWidth-innerWidth+60;hrow.style.transform="translate3d("+(-p*max)+"px,0,0)";hrail.style.transform="scaleX("+p+")";
+      const mid=innerWidth/2;
+      wcs.forEach(c=>{const b=c.getBoundingClientRect();if(b.right<-200||b.left>innerWidth+200)return;
+        const d=clamp((b.left+b.width/2-mid)/mid,-1.2,1.2);
+        c.style.transform="rotateY("+(-d*18)+"deg) translateZ("+(-Math.abs(d)*70)+"px) scale("+(1-Math.abs(d)*.08)+")";
+        c.style.opacity=1-Math.abs(d)*.35})}}
+}
+function req(){if(!ticking){ticking=true;requestAnimationFrame(update)}}
+addEventListener("scroll",req,{passive:true});
+addEventListener("resize",()=>{sizeHS();req()});
+// --- живые числа в карточках виджетов
+function live(){const d=new Date(),pad=n=>String(n).padStart(2,"0");
+  $$("[data-live=time]").forEach(e=>e.textContent=pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds()));
+  $$("#hc3,#clk3").forEach(e=>e.textContent=pad(d.getHours())+":"+pad(d.getMinutes()));
+  const t=(Math.floor(Date.now()/1000)%300);$$("[data-live=timer]").forEach(e=>e.textContent=pad(Math.floor((300-t)/60))+":"+pad((300-t)%60))}
+setInterval(()=>{if(!document.hidden)live()},1000);live();
+// --- сцены истории (звёзд меньше, без анимации)
+(function(){if(!sl.length||!window.__scene)return;sl.forEach(e=>window.__scene(e.querySelector("svg"),e.dataset.theme,14))})();
+// --- маски заголовков + «расшифровка» надписей
+const SCR="▮▯#%&01<>/";
+function scramble(el){const t=el.textContent;if(reduce||t.length>40)return;let f=0;
+  (function step(){f++;let o="";for(let i=0;i<t.length;i++){o+=(t[i]==" "||i<f/1.2)?t[i]:SCR[(Math.random()*SCR.length)|0]}
+    el.textContent=o;if(f<t.length*1.2+2)requestAnimationFrame(step);else el.textContent=t})()}
+// clip-path у самого элемента обнуляет его видимую площадь для IntersectionObserver, поэтому следим за родителем
+const mio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;mio.unobserve(e.target);e.target.querySelectorAll(":scope > .mk").forEach(m=>m.classList.add("in"))}),{rootMargin:"0px 0px -12% 0px"});
+$$("h2").forEach(h=>{if(!h.closest(".welcome")&&!h.closest(".final")){h.classList.add("mk")}});
+new Set($$(".mk").map(h=>h.parentElement)).forEach(pe=>mio.observe(pe));
+const eio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;eio.unobserve(e.target);scramble(e.target)}),{threshold:.6});
+$$(".eyebrow").forEach(e=>eio.observe(e));
+// --- курсор
+if(fine&&!reduce){
+  const c=document.createElement("div");c.className="cur";c.innerHTML="<i></i>";document.body.append(c);
+  let tx=0,ty=0,x=0,y=0,run=false;
+  function loop(){x=lerp(x,tx,.2);y=lerp(y,ty,.2);c.style.transform="translate3d("+x+"px,"+y+"px,0)";
+    if(Math.abs(tx-x)+Math.abs(ty-y)>.3)requestAnimationFrame(loop);else run=false}
+  addEventListener("mousemove",e=>{tx=e.clientX;ty=e.clientY;c.classList.add("on");if(!run){run=true;requestAnimationFrame(loop)}},{passive:true});
+  document.addEventListener("mouseleave",()=>c.classList.remove("on"));
+  document.addEventListener("mouseover",e=>c.classList.toggle("big",!!e.target.closest("a,button,.card,.shot,.chip,summary,.wc")));
+}
+// язык: пересобрать слова манифеста
+$$(".lang button").forEach(b=>b.addEventListener("click",()=>setTimeout(()=>{buildMani();themeNow="";req()},0)));
+buildMani();sizeHS();addEventListener("load",()=>{sizeHS();req()});req();
 })();
 </script>
 </body>
